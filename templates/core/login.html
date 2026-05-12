@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Login — ZovoAssets{% endblock %}
+{% block auth_content %}
+<div style="min-height:100vh;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:2rem;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 50%);pointer-events:none;"></div>
+  <div style="width:100%;max-width:420px;position:relative;">
+    <div style="text-align:center;margin-bottom:2.5rem;">
+      <a href="/" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--gold);text-decoration:none;letter-spacing:-1px;">ZOVO<span style="color:var(--text);">ASSETS</span></a>
+      <p style="color:var(--text-muted);margin-top:0.5rem;font-size:0.9rem;">Investment & Loan Management Platform</p>
+    </div>
+    <div class="z-card" style="padding:2.5rem;">
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:0.25rem;">Welcome back</h2>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:2rem;">Sign in to your account</p>
+      {% if form.non_field_errors %}
+      <div class="z-alert error mb-3"><i class="fas fa-circle-xmark"></i> {{ form.non_field_errors.0 }}</div>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:1.25rem;">
+          <label class="z-label">Email Address</label>
+          <input type="email" name="email" class="z-input" placeholder="you@example.com" value="{{ form.email.value|default:'' }}" required>
+        </div>
+        <div style="margin-bottom:1.75rem;">
+          <label class="z-label">Password</label>
+          <input type="password" name="password" class="z-input" placeholder="Your password" required>
+        </div>
+        <button type="submit" class="btn-gold" style="width:100%;text-align:center;">Sign In</button>
+      </form>
+      <p style="text-align:center;margin-top:1.5rem;font-size:0.875rem;color:var(--text-muted);">
+        No account? <a href="{% url 'register' %}" style="color:var(--gold);text-decoration:none;font-weight:600;">Start investing →</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

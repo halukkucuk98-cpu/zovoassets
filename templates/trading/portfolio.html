@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Portfolio — ZovoAssets{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+  <div>
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Portfolio</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">Your positions, performance, and trade history</p>
+  </div>
+  <a href="{% url 'trade' %}" class="btn-gold"><i class="fas fa-chart-line" style="margin-right:0.5rem;"></i>Trade Now</a>
+</div>
+
+<!-- STATS -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;">
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:var(--gold-dim);"><i class="fas fa-wallet" style="color:var(--gold);"></i></div>
+      <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Wallet</span>
+    </div>
+    <div class="stat-value">${{ wallet.balance|floatformat:2 }}</div>
+    <div class="stat-label">Available cash</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(77,142,255,0.12);"><i class="fas fa-briefcase" style="color:var(--blue);"></i></div>
+      <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Positions</span>
+    </div>
+    <div class="stat-value">${{ total_open_value|floatformat:2 }}</div>
+    <div class="stat-label">Open position value</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(0,200,150,0.12);"><i class="fas fa-arrow-trend-up" style="color:var(--green);"></i></div>
+      <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Unrealized</span>
+    </div>
+    <div class="stat-value {% if total_unrealized >= 0 %}up{% else %}down{% endif %}">{% if total_unrealized >= 0 %}+{% endif %}${{ total_unrealized|floatformat:2 }}</div>
+    <div class="stat-label">Unrealized P&L</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(201,168,76,0.12);"><i class="fas fa-coins" style="color:var(--gold);"></i></div>
+      <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Realized</span>
+    </div>
+    <div class="stat-value {% if realized_pnl >= 0 %}up{% else %}down{% endif %}">{% if realized_pnl >= 0 %}+{% endif %}${{ realized_pnl|floatformat:2 }}</div>
+    <div class="stat-label">Realized P&L</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(0,200,150,0.12);"><i class="fas fa-trophy" style="color:var(--green);"></i></div>
+      <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Win Rate</span>
+    </div>
+    <div class="stat-value">{{ win_rate }}%</div>
+    <div class="stat-label">{{ total_trades }} closed trades</div>
+  </div>
+</div>
+
+<!-- OPEN POSITIONS -->
+<div class="z-card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
+  <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;">
+    <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;">Open Positions <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;margin-left:0.5rem;">{{ open_trades|length }} active</span></h3>
+  </div>
+  {% if open_trades %}
+  <table class="z-table">
+    <thead><tr><th>Asset</th><th>Type</th><th>Quantity</th><th>Entry Price</th><th>Current Price</th><th>Cost Basis</th><th>Current Value</th><th>P&L</th><th>P&L %</th><th>Action</th></tr></thead>
+    <tbody id="openPositions">
+      {% for t in open_trades %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <div style="width:32px;height:32px;border-radius:8px;background:{{ t.asset.color }}22;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.7rem;color:{{ t.asset.color }};">{{ t.asset.icon_letters }}</div>
+            <div><div style="font-family:'Syne',sans-serif;font-weight:700;">{{ t.asset.symbol }}</div><div style="font-size:0.75rem;color:var(--text-muted);">{{ t.asset.name }}</div></div>
+          </div>
+        </td>
+        <td><span class="z-badge badge-buy">BUY</span></td>
+        <td style="font-family:'Syne',sans-serif;">{{ t.quantity|floatformat:6 }}</td>
+        <td>${{ t.entry_price|floatformat:2 }}</td>
+        <td id="pt-cur-{{ t.id }}">${{ t.asset.current_price|floatformat:2 }}</td>
+        <td>${{ t.cost_basis|floatformat:2 }}</td>
+        <td id="pt-val-{{ t.id }}">${{ t.current_value|floatformat:2 }}</td>
+        <td id="pt-pnl-{{ t.id }}" class="{% if t.unrealized_pnl >= 0 %}up{% else %}down{% endif %}" style="font-family:'Syne',sans-serif;font-weight:700;">{% if t.unrealized_pnl >= 0 %}+{% endif %}${{ t.unrealized_pnl|floatformat:2 }}</td>
+        <td id="pt-pct-{{ t.id }}" class="{% if t.unrealized_pnl_pct >= 0 %}up{% else %}down{% endif %}">{{ t.unrealized_pnl_pct|floatformat:2 }}%</td>
+        <td>
+          <div style="display:flex;gap:0.5rem;">
+            <a href="/trading/trade/{{ t.asset.symbol }}/" class="btn-outline-gold" style="padding:0.35rem 0.85rem;font-size:0.75rem;">View</a>
+            <button class="btn-red" style="padding:0.35rem 0.85rem;font-size:0.75rem;" onclick="closePosition({{ t.id }},'{{ t.asset.symbol }}')">Close</button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-chart-pie"></i>
+    <p style="font-family:'Syne',sans-serif;font-weight:600;margin-bottom:0.5rem;">No open positions</p>
+    <p style="font-size:0.875rem;margin-bottom:1.5rem;">Head to the market and place your first trade.</p>
+    <a href="{% url 'trade' %}" class="btn-gold">Go to Trading</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- CLOSED TRADES -->
+<div class="z-card" style="padding:0;overflow:hidden;">
+  <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border-soft);">
+    <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;">Trade History <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;margin-left:0.5rem;">Last 20 closed trades</span></h3>
+  </div>
+  {% if closed_trades %}
+  <table class="z-table">
+    <thead><tr><th>Asset</th><th>Side</th><th>Quantity</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Closed</th></tr></thead>
+    <tbody>
+      {% for t in closed_trades %}
+      <tr>
+        <td><strong style="font-family:'Syne',sans-serif;">{{ t.asset.symbol }}</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">{{ t.asset.name }}</span></td>
+        <td><span class="z-badge badge-{{ t.side }}">{{ t.side|upper }}</span></td>
+        <td>{{ t.quantity|floatformat:4 }}</td>
+        <td>${{ t.entry_price|floatformat:2 }}</td>
+        <td>${{ t.exit_price|floatformat:2 }}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:700;" class="{% if t.pnl >= 0 %}up{% else %}down{% endif %}">{% if t.pnl >= 0 %}+{% endif %}${{ t.pnl|floatformat:2 }}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{{ t.closed_at|date:"M d, Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-clock-rotate-left"></i><p style="font-size:0.875rem;">No closed trades yet</p></div>
+  {% endif %}
+</div>
+
+<script>
+setInterval(() => {
+  fetch('/trading/api/positions/')
+    .then(r=>r.json())
+    .then(d => {
+      d.positions.forEach(p => {
+        const curEl=document.getElementById('pt-cur-'+p.id);
+        const valEl=document.getElementById('pt-val-'+p.id);
+        const pnlEl=document.getElementById('pt-pnl-'+p.id);
+        const pctEl=document.getElementById('pt-pct-'+p.id);
+        if(curEl) curEl.textContent='$'+p.current_price.toLocaleString('en-US',{minimumFractionDigits:2});
+        if(valEl) valEl.textContent='$'+p.current_value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        if(pnlEl){pnlEl.textContent=(p.pnl>=0?'+$':'-$')+Math.abs(p.pnl).toFixed(2);pnlEl.className=p.pnl>=0?'up':'down';}
+        if(pctEl){pctEl.textContent=p.pnl_pct.toFixed(2)+'%';pctEl.className=p.pnl_pct>=0?'up':'down';}
+      });
+    });
+},2000);
+
+function closePosition(id, symbol) {
+  if(!confirm('Close this '+symbol+' position?')) return;
+  fetch('/trading/api/execute/',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':window.CSRF},
+    body:JSON.stringify({symbol:symbol,side:'sell',trade_id:id,amount:0})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){showToast(d.message,d.pnl>=0?'success':'error');setTimeout(()=>location.reload(),1500);}
+    else showToast(d.error,'error');
+  });
+}
+</script>
+{% endblock %}

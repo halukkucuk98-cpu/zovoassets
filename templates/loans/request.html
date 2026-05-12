@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Request Loan — ZovoAssets{% endblock %}
+{% block content %}
+<div style="max-width:560px;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.25rem;">Request a Loan</h1>
+    <p style="color:var(--text-muted);">Fill in the details below and our team will review your request</p>
+  </div>
+
+  <div class="z-card" style="padding:2rem;">
+    {% if form.non_field_errors %}
+    <div class="z-alert error mb-3"><i class="fas fa-circle-xmark"></i> {{ form.non_field_errors.0 }}</div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">Loan Amount (USD)</label>
+        <div style="position:relative;">
+          <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:600;">$</span>
+          <input type="number" name="amount" class="z-input" style="padding-left:2rem!important;" placeholder="5000" min="100" value="{{ form.amount.value|default:'' }}" required>
+        </div>
+        {% if form.amount.errors %}<p style="color:var(--red);font-size:0.8rem;margin-top:0.3rem;">{{ form.amount.errors.0 }}</p>{% endif %}
+      </div>
+      <div style="margin-bottom:1.75rem;">
+        <label class="z-label">Purpose of Loan</label>
+        <textarea name="purpose" class="z-input" rows="4" placeholder="Describe why you need this loan and how you plan to use it..." required>{{ form.purpose.value|default:'' }}</textarea>
+        {% if form.purpose.errors %}<p style="color:var(--red);font-size:0.8rem;margin-top:0.3rem;">{{ form.purpose.errors.0 }}</p>{% endif %}
+      </div>
+      <div style="background:var(--dark-3);border-radius:10px;padding:1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;">
+        <i class="fas fa-circle-info" style="color:var(--blue);"></i>
+        <p style="font-size:0.825rem;color:var(--text-muted);margin:0;">Loan requests are reviewed within 24–48 hours. You'll see the status update on your dashboard.</p>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;text-align:center;"><i class="fas fa-paper-plane" style="margin-right:0.5rem;"></i>Submit Loan Request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

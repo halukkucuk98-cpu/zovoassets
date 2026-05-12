@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}New Investment — ZovoAssets{% endblock %}
+{% block content %}
+<div style="max-width:720px;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.25rem;">New Investment</h1>
+    <p style="color:var(--text-muted);">Select a plan and commit your funds</p>
+  </div>
+
+  {% if messages %}{% for msg in messages %}
+  <div class="z-alert error mb-3"><i class="fas fa-circle-xmark"></i> {{ msg }}</div>
+  {% endfor %}{% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;">
+      {% for plan in plans %}
+      <label style="cursor:pointer;">
+        <input type="radio" name="plan_id" value="{{ plan.id }}" data-min="{{ plan.min_amount }}" data-max="{{ plan.max_amount|default:'' }}" data-roi="{{ plan.roi_percent }}" class="plan-radio" style="display:none;">
+        <div class="plan-card z-card" style="transition:all 0.2s;position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
+            <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">{{ plan.name }}</span>
+            <span style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--gold);">{{ plan.roi_percent }}%</span>
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">{{ plan.duration_days }}-day investment period</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;">
+            <span style="color:var(--text-muted);">Min: <strong style="color:var(--text);">{{ plan.display_min }}</strong></span>
+            <span style="color:var(--text-muted);">Max: <strong style="color:var(--text);">{{ plan.display_max }}</strong></span>
+          </div>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+
+    <!-- Amount & Preview (hidden until plan selected) -->
+    <div id="amountSection" style="display:none;">
+      <div class="z-card" style="margin-bottom:1rem;">
+        <label class="z-label">Investment Amount (USD)</label>
+        <div style="position:relative;margin-bottom:1rem;">
+          <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:600;">$</span>
+          <input type="number" name="amount" id="amountInput" class="z-input" style="padding-left:2rem!important;" placeholder="Enter amount" required>
+        </div>
+        <div style="background:var(--dark-3);border-radius:10px;padding:1rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+          <div><div style="font-size:0.75rem;color:var(--text-muted);">Your investment</div><div id="pAmt" style="font-family:'Syne',sans-serif;font-weight:700;">$0.00</div></div>
+          <div><div style="font-size:0.75rem;color:var(--text-muted);">Profit</div><div id="pProfit" style="font-family:'Syne',sans-serif;font-weight:700;color:var(--green);">+$0.00</div></div>
+          <div><div style="font-size:0.75rem;color:var(--text-muted);">Total return</div><div id="pTotal" style="font-family:'Syne',sans-serif;font-weight:700;color:var(--gold);">$0.00</div></div>
+        </div>
+      </div>
+      <button type="submit" class="btn-gold"><i class="fas fa-rocket" style="margin-right:0.5rem;"></i>Submit Investment</button>
+    </div>
+  </form>
+</div>
+<style>
+.plan-radio:checked + .plan-card { border-color: var(--gold) !important; background: rgba(201,168,76,0.06) !important; }
+.plan-card:hover { border-color: rgba(201,168,76,0.4) !important; }
+</style>
+<script>
+let currentRoi = 0;
+document.querySelectorAll('.plan-radio').forEach(r => {
+  r.addEventListener('change', function() {
+    currentRoi = parseFloat(this.dataset.roi);
+    document.getElementById('amountSection').style.display = 'block';
+    document.getElementById('amountInput').min = this.dataset.min;
+    if (this.dataset.max) document.getElementById('amountInput').max = this.dataset.max;
+    updatePreview();
+  });
+});
+function updatePreview() {
+  const amt = parseFloat(document.getElementById('amountInput').value) || 0;
+  const profit = amt * currentRoi / 100;
+  document.getElementById('pAmt').textContent = '$' + amt.toLocaleString('en-US', {minimumFractionDigits:2});
+  document.getElementById('pProfit').textContent = '+$' + profit.toLocaleString('en-US', {minimumFractionDigits:2});
+  document.getElementById('pTotal').textContent = '$' + (amt + profit).toLocaleString('en-US', {minimumFractionDigits:2});
+}
+document.getElementById('amountInput').addEventListener('input', updatePreview);
+</script>
+{% endblock %}

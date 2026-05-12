@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Set Investment Amount — ZovoAssets{% endblock %}
+{% block auth_content %}
+<div style="min-height:100vh;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:2rem;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 70%, rgba(201,168,76,0.06) 0%, transparent 60%);pointer-events:none;"></div>
+  <div style="width:100%;max-width:480px;position:relative;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <a href="/" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--gold);text-decoration:none;">ZOVO<span style="color:var(--text);">ASSETS</span></a>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:2rem;">
+      {% for i in "123" %}
+      <div style="display:flex;align-items:center;">
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;background:var(--gold);color:#000;">{{ forloop.counter }}</div>
+        {% if not forloop.last %}<div style="width:48px;height:1px;background:var(--gold);"></div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div style="text-align:center;margin-bottom:2rem;">
+      <p style="font-size:0.75rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:1px;">Step 3 of 3 — Set Your Investment</p>
+    </div>
+
+    <!-- Plan summary -->
+    <div class="z-card" style="margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;">
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">Selected Plan</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;">{{ plan.name }}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem;color:var(--text-muted);">Returns</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--gold);font-size:1.4rem;">{{ plan.roi_percent }}%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem;color:var(--text-muted);">Duration</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;">{{ plan.duration_days }} days</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.75rem;color:var(--text-muted);">Min Amount</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;">{{ plan.display_min }}</div>
+      </div>
+    </div>
+
+    <div class="z-card" style="padding:2.5rem;">
+      {% if messages %}{% for msg in messages %}
+      <div class="z-alert error mb-3"><i class="fas fa-circle-xmark"></i> {{ msg }}</div>
+      {% endfor %}{% endif %}
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:0.25rem;">Investment Amount</h2>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:2rem;">Minimum: <strong style="color:var(--text);">{{ plan.display_min }}</strong>{% if plan.max_amount %} — Max: <strong style="color:var(--text);">{{ plan.display_max }}</strong>{% endif %}</p>
+      <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom:0.75rem;">
+          <label class="z-label">Amount (USD)</label>
+          <div style="position:relative;">
+            <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:600;">$</span>
+            <input type="number" name="amount" id="amountInput" class="z-input" style="padding-left:2rem!important;" placeholder="{{ plan.min_amount }}" min="{{ plan.min_amount }}" {% if plan.max_amount %}max="{{ plan.max_amount }}"{% endif %} required>
+          </div>
+        </div>
+        <!-- ROI Preview -->
+        <div style="background:var(--dark-3);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.75rem;">
+          <div style="font-size:0.75rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem;">Projected Returns</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+            <span style="font-size:0.875rem;color:var(--text-muted);">Your investment</span>
+            <span id="previewAmount" style="font-family:'Syne',sans-serif;font-weight:600;">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+            <span style="font-size:0.875rem;color:var(--text-muted);">Profit ({{ plan.roi_percent }}%)</span>
+            <span id="previewProfit" style="font-family:'Syne',sans-serif;font-weight:600;color:var(--green);">+$0.00</span>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:0.5rem;display:flex;justify-content:space-between;">
+            <span style="font-family:'Syne',sans-serif;font-weight:700;">Total return</span>
+            <span id="previewTotal" style="font-family:'Syne',sans-serif;font-weight:800;color:var(--gold);font-size:1.1rem;">$0.00</span>
+          </div>
+        </div>
+        <button type="submit" class="btn-gold" style="width:100%;text-align:center;"><i class="fas fa-rocket" style="margin-right:0.5rem;"></i>Create Account & Invest</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+const roi = {{ plan.roi_percent }};
+const input = document.getElementById('amountInput');
+function update() {
+  const amt = parseFloat(input.value) || 0;
+  const profit = amt * roi / 100;
+  document.getElementById('previewAmount').textContent = '$' + amt.toLocaleString('en-US', {minimumFractionDigits:2});
+  document.getElementById('previewProfit').textContent = '+$' + profit.toLocaleString('en-US', {minimumFractionDigits:2});
+  document.getElementById('previewTotal').textContent = '$' + (amt + profit).toLocaleString('en-US', {minimumFractionDigits:2});
+}
+input.addEventListener('input', update);
+</script>
+{% endblock %}

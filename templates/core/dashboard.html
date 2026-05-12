@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ZovoAssets{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+  <div>
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Good day, {{ user.full_name.split.0 }} 👋</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">Here's your complete financial overview</p>
+  </div>
+  <div style="display:flex;gap:0.75rem;">
+    <a href="{% url 'trade' %}" class="btn-outline-gold"><i class="fas fa-chart-candlestick" style="margin-right:0.4rem;"></i>Trade</a>
+    <a href="{% url 'new_investment' %}" class="btn-outline-gold"><i class="fas fa-seedling" style="margin-right:0.4rem;"></i>Invest</a>
+    <a href="{% url 'request_loan' %}" class="btn-gold"><i class="fas fa-hand-holding-usd" style="margin-right:0.4rem;"></i>Loan</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:var(--gold-dim);"><i class="fas fa-wallet" style="color:var(--gold);"></i></div>
+      <span style="font-size:0.65rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;">Balance</span>
+    </div>
+    <div class="stat-value">${{ wallet.balance|floatformat:2 }}</div>
+    <div class="stat-label">Available cash</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(77,142,255,0.12);"><i class="fas fa-chart-line" style="color:var(--blue);"></i></div>
+      <span style="font-size:0.65rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;">Invested</span>
+    </div>
+    <div class="stat-value">${{ wallet.total_invested|floatformat:2 }}</div>
+    <div class="stat-label">Fixed investments</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(0,200,150,0.12);"><i class="fas fa-coins" style="color:var(--green);"></i></div>
+      <span style="font-size:0.65rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;">Profit</span>
+    </div>
+    <div class="stat-value" style="color:var(--green);">+${{ wallet.total_profit|floatformat:2 }}</div>
+    <div class="stat-label">Total ROI earned</div>
+  </div>
+  <div class="stat-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="stat-icon" style="background:rgba(201,168,76,0.12);"><i class="fas fa-layer-group" style="color:var(--gold);"></i></div>
+      <span style="font-size:0.65rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.5px;">Trades</span>
+    </div>
+    <div class="stat-value">{{ trade_count }}</div>
+    <div class="stat-label">Total trades placed</div>
+  </div>
+</div>
+
+<!-- Active investment banner -->
+{% if active_investment %}
+<div class="z-card" style="margin-bottom:1.5rem;background:linear-gradient(135deg,rgba(201,168,76,0.06),transparent);border-color:var(--border);">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <div style="width:48px;height:48px;border-radius:14px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;"><i class="fas fa-seedling" style="color:var(--gold);font-size:1.1rem;"></i></div>
+      <div>
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+          <span class="z-badge badge-active">● Active</span>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;">{{ active_investment.plan.name }} Investment</span>
+        </div>
+        <p style="color:var(--text-muted);font-size:0.875rem;">${{ active_investment.amount|floatformat:2 }} invested — Expected profit: <span style="color:var(--green);">+${{ active_investment.profit|floatformat:2 }}</span></p>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.3rem;">{{ active_investment.days_remaining }} days remaining · Matures {{ active_investment.end_date|date:"M d, Y" }}</div>
+      <div class="z-progress" style="width:200px;"><div class="z-progress-bar" style="width:{{ active_investment.progress_percent }}%;"></div></div>
+    </div>
+  </div>
+</div>
+{% elif pending_investment %}
+<div class="z-card" style="margin-bottom:1.5rem;background:rgba(77,142,255,0.04);border-color:rgba(77,142,255,0.2);">
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <div style="width:44px;height:44px;border-radius:12px;background:rgba(77,142,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-hourglass-half" style="color:var(--blue);"></i></div>
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:0.2rem;">Investment Pending Activation</div>
+      <p style="color:var(--text-muted);font-size:0.875rem;"><strong style="color:var(--text);">{{ pending_investment.plan.name }}</strong> plan · ${{ pending_investment.amount|floatformat:2 }} — Awaiting admin approval.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+  <!-- Investments -->
+  <div class="z-card" style="padding:0;overflow:hidden;">
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;">Fixed Investments</h3>
+      <a href="{% url 'new_investment' %}" style="font-size:0.78rem;color:var(--gold);">+ New</a>
+    </div>
+    {% if investments %}
+    <table class="z-table">
+      <thead><tr><th>Plan</th><th>Amount</th><th>Profit</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for inv in investments %}
+        <tr>
+          <td><span style="font-family:'Syne',sans-serif;font-weight:600;">{{ inv.plan.name }}</span><br><span style="font-size:0.72rem;color:var(--text-muted);">{{ inv.plan.roi_percent }}% / {{ inv.plan.duration_days }}d</span></td>
+          <td style="font-family:'Syne',sans-serif;font-weight:600;">${{ inv.amount|floatformat:2 }}</td>
+          <td style="color:var(--green);font-family:'Syne',sans-serif;">{% if inv.profit %}+${{ inv.profit|floatformat:2 }}{% else %}<span style="color:var(--text-muted);">—</span>{% endif %}</td>
+          <td><span class="z-badge badge-{{ inv.status }}">{{ inv.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-seedling"></i><p style="font-size:0.875rem;margin-bottom:1rem;">No investments yet</p><a href="{% url 'new_investment' %}" class="btn-gold" style="font-size:0.8rem;padding:0.55rem 1.25rem;">Start Investing</a></div>
+    {% endif %}
+  </div>
+
+  <!-- Open Trades -->
+  <div class="z-card" style="padding:0;overflow:hidden;">
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;">Open Trades</h3>
+      <a href="{% url 'trade' %}" style="font-size:0.78rem;color:var(--gold);">Trade →</a>
+    </div>
+    {% if open_trades %}
+    <table class="z-table">
+      <thead><tr><th>Asset</th><th>Entry</th><th>P&L</th><th></th></tr></thead>
+      <tbody>
+        {% for t in open_trades %}
+        <tr>
+          <td><strong style="font-family:'Syne',sans-serif;">{{ t.asset.symbol }}</strong><br><span style="font-size:0.72rem;color:var(--text-muted);">{{ t.quantity|floatformat:4 }} units</span></td>
+          <td>${{ t.entry_price|floatformat:2 }}</td>
+          <td class="{% if t.unrealized_pnl >= 0 %}up{% else %}down{% endif %}" style="font-family:'Syne',sans-serif;font-weight:700;">{% if t.unrealized_pnl >= 0 %}+{% endif %}${{ t.unrealized_pnl|floatformat:2 }}</td>
+          <td><a href="/trading/trade/{{ t.asset.symbol }}/" style="font-size:0.78rem;color:var(--gold);">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-chart-candlestick"></i><p style="font-size:0.875rem;margin-bottom:1rem;">No open trades</p><a href="{% url 'trade' %}" class="btn-outline-gold" style="font-size:0.8rem;padding:0.55rem 1.25rem;">Start Trading</a></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Loans -->
+<div class="z-card" style="padding:0;overflow:hidden;">
+  <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+    <h3 style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;">Loan Requests</h3>
+    <a href="{% url 'request_loan' %}" style="font-size:0.78rem;color:var(--gold);">+ Request</a>
+  </div>
+  {% if loans %}
+  <table class="z-table">
+    <thead><tr><th>Amount</th><th>Purpose</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for loan in loans %}
+      <tr>
+        <td style="font-family:'Syne',sans-serif;font-weight:700;">${{ loan.amount|floatformat:2 }}</td>
+        <td style="color:var(--text-muted);font-size:0.875rem;">{{ loan.purpose|truncatechars:50 }}</td>
+        <td><span class="z-badge badge-{{ loan.status }}">{{ loan.get_status_display }}</span></td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{{ loan.created_at|date:"M d, Y" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state" style="padding:2rem;"><i class="fas fa-hand-holding-usd"></i><p style="font-size:0.875rem;">No loan requests</p></div>
+  {% endif %}
+</div>
+{% endblock %}

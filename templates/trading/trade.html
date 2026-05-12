@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% block title %}Trade {{ asset.symbol }} — ZovoAssets{% endblock %}
+{% block extra_css %}
+<style>
+.trade-layout{display:grid;grid-template-columns:200px 1fr 280px;grid-template-rows:auto 1fr auto;height:calc(100vh - 60px);overflow:hidden;margin:-2rem;}
+/* MARKET LIST */
+.market-list{grid-row:1/4;background:var(--dark-2);border-right:1px solid var(--border-soft);overflow-y:auto;padding-top:0.5rem;}
+.market-list-header{padding:0.75rem 1rem;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border-soft);position:sticky;top:0;background:var(--dark-2);}
+.asset-row{display:flex;flex-direction:column;padding:0.6rem 1rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.15s;}
+.asset-row:hover{background:var(--dark-4);}
+.asset-row.active{background:var(--gold-dim);border-left:2px solid var(--gold);}
+.asset-row-sym{font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;color:var(--text);}
+.asset-row-price{font-size:0.78rem;color:var(--text-soft);margin-top:0.1rem;}
+.asset-row-change{font-size:0.72rem;font-weight:600;font-family:'Syne',sans-serif;}
+/* CHART AREA */
+.chart-area{padding:1.25rem;border-bottom:1px solid var(--border-soft);overflow:hidden;}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.chart-asset-info{display:flex;align-items:center;gap:1rem;}
+.chart-symbol{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;}
+.chart-price{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:800;color:var(--text);}
+.chart-change{font-size:0.875rem;font-weight:600;font-family:'Syne',sans-serif;padding:0.25rem 0.75rem;border-radius:6px;}
+.chart-stats{display:flex;gap:2rem;}
+.chart-stat{font-size:0.78rem;}
+.chart-stat-label{color:var(--text-muted);}
+.chart-stat-val{font-family:'Syne',sans-serif;font-weight:700;margin-top:0.15rem;}
+#priceChart{width:100%;display:block;}
+/* TRADE PANEL */
+.trade-panel{grid-row:1/3;background:var(--dark-2);border-left:1px solid var(--border-soft);padding:1.25rem;overflow-y:auto;}
+.panel-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--dark-4);border-radius:10px;padding:3px;margin-bottom:1.25rem;}
+.panel-tab{padding:0.55rem;border-radius:8px;font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;border:none;background:transparent;color:var(--text-muted);transition:all 0.2s;}
+.panel-tab.buy.active{background:rgba(0,200,150,0.2);color:var(--green);}
+.panel-tab.sell.active{background:rgba(255,77,106,0.2);color:var(--red);}
+.order-info{background:var(--dark-3);border-radius:10px;padding:1rem;margin-top:1rem;}
+.order-row{display:flex;justify-content:space-between;font-size:0.82rem;padding:0.3rem 0;}
+.order-row span:first-child{color:var(--text-muted);}
+.execute-btn{width:100%;padding:0.85rem;border-radius:12px;font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;border:none;cursor:pointer;margin-top:1rem;transition:all 0.2s;letter-spacing:0.3px;}
+.execute-btn.buy{background:linear-gradient(135deg,#00C896,#00A87A);color:#000;}
+.execute-btn.buy:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,200,150,0.3);}
+.execute-btn.sell{background:linear-gradient(135deg,#FF4D6A,#E0334E);color:#fff;}
+.execute-btn.sell:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,77,106,0.3);}
+.execute-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important;}
+.balance-display{display:flex;justify-content:space-between;align-items:center;padding:0.75rem;background:var(--dark-3);border-radius:10px;margin-bottom:1.25rem;}
+.pct-btns{display:flex;gap:0.4rem;margin-top:0.5rem;}
+.pct-btn{flex:1;padding:0.35rem;border-radius:6px;border:1px solid var(--border-soft);background:transparent;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all 0.2s;}
+.pct-btn:hover{border-color:var(--gold);color:var(--gold);}
+/* POSITIONS */
+.positions-area{grid-column:2/4;background:var(--dark-2);border-top:1px solid var(--border-soft);overflow-y:auto;max-height:220px;}
+.pos-tabs{display:flex;border-bottom:1px solid var(--border-soft);}
+.pos-tab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;transition:all 0.2s;}
+.pos-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="trade-layout">
+  <!-- MARKET LIST -->
+  <div class="market-list">
+    <div class="market-list-header">Markets</div>
+    {% for a in assets %}
+    <div class="asset-row {% if a.symbol == asset.symbol %}active{% endif %}" onclick="location.href='/trading/trade/{{ a.symbol }}/'">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="asset-row-sym">{{ a.symbol }}</span>
+        <span class="asset-row-change {% if a.change_24h >= 0 %}up{% else %}down{% endif %}" id="chg-{{ a.symbol }}">
+          {% if a.change_24h >= 0 %}+{% endif %}{{ a.change_24h|floatformat:2 }}%
+        </span>
+      </div>
+      <span class="asset-row-price" id="list-{{ a.symbol }}">${{ a.current_price|floatformat:2 }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CHART AREA -->
+  <div class="chart-area">
+    <div class="chart-header">
+      <div class="chart-asset-info">
+        <div style="width:44px;height:44px;border-radius:12px;background:{{ asset.color }}22;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:{{ asset.color }};font-size:0.85rem;">{{ asset.icon_letters }}</div>
+        <div>
+          <div class="chart-symbol">{{ asset.symbol }}<span style="color:var(--text-muted);font-size:1rem;font-weight:400;">/USD</span></div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">{{ asset.name }}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.5rem;">
+        <div>
+          <div class="chart-price" id="mainPrice">${{ asset.current_price|floatformat:2 }}</div>
+        </div>
+        <div class="chart-change {% if asset.change_24h >= 0 %}up" style="background:rgba(0,200,150,0.1){% else %}down" style="background:rgba(255,77,106,0.1){% endif %}" id="mainChange">
+          {% if asset.change_24h >= 0 %}+{% endif %}{{ asset.change_24h|floatformat:2 }}%
+        </div>
+      </div>
+      <div class="chart-stats">
+        <div class="chart-stat"><div class="chart-stat-label">24h High</div><div class="chart-stat-val" id="stat24H" style="color:var(--green);">${{ asset.current_price|floatformat:2 }}</div></div>
+        <div class="chart-stat"><div class="chart-stat-label">24h Low</div><div class="chart-stat-val" id="stat24L" style="color:var(--red);">${{ asset.current_price|floatformat:2 }}</div></div>
+        <div class="chart-stat"><div class="chart-stat-label">Asset Type</div><div class="chart-stat-val">{{ asset.get_asset_type_display }}</div></div>
+      </div>
+    </div>
+    <canvas id="priceChart" height="180"></canvas>
+  </div>
+
+  <!-- TRADE PANEL -->
+  <div class="trade-panel">
+    <div class="balance-display">
+      <span style="font-size:0.78rem;color:var(--text-muted);">Available</span>
+      <strong style="font-family:'Syne',sans-serif;color:var(--gold);" id="panelBalance">${{ wallet.balance|floatformat:2 }}</strong>
+    </div>
+    <div class="panel-tabs">
+      <button class="panel-tab buy active" id="tabBuy" onclick="setTab('buy')">Buy</button>
+      <button class="panel-tab sell" id="tabSell" onclick="setTab('sell')">Sell</button>
+    </div>
+    <div>
+      <label class="z-label">Amount (USD)</label>
+      <input type="number" class="z-input" id="tradeAmount" placeholder="0.00" min="1" step="0.01">
+      <div class="pct-btns">
+        <button class="pct-btn" onclick="setPct(25)">25%</button>
+        <button class="pct-btn" onclick="setPct(50)">50%</button>
+        <button class="pct-btn" onclick="setPct(75)">75%</button>
+        <button class="pct-btn" onclick="setPct(100)">Max</button>
+      </div>
+    </div>
+    <div class="order-info">
+      <div class="order-row"><span>Asset</span><span style="font-family:'Syne',sans-serif;font-weight:700;">{{ asset.symbol }}/USD</span></div>
+      <div class="order-row"><span>Price</span><span id="orderPrice">${{ asset.current_price|floatformat:2 }}</span></div>
+      <div class="order-row"><span>Order Type</span><span>Market</span></div>
+      <div class="order-row"><span>Est. Quantity</span><span id="orderQty">—</span></div>
+    </div>
+    <button class="execute-btn buy" id="executeBtn" onclick="executeTrade()">Buy {{ asset.symbol }}</button>
+    {% if open_trades %}
+    <div style="margin-top:1.5rem;border-top:1px solid var(--border-soft);padding-top:1.25rem;">
+      <div style="font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:0.75rem;">Open Positions</div>
+      {% for t in open_trades %}
+      {% if t.asset.symbol == asset.symbol %}
+      <div style="background:var(--dark-3);border-radius:10px;padding:0.85rem;margin-bottom:0.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;">{{ t.asset.symbol }}</span>
+          <span class="{% if t.unrealized_pnl >= 0 %}up{% else %}down{% endif %}" style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;" id="pos-pnl-{{ t.id }}">
+            {% if t.unrealized_pnl >= 0 %}+{% endif %}${{ t.unrealized_pnl|floatformat:2 }}
+          </span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);">Entry: ${{ t.entry_price|floatformat:2 }} · {{ t.quantity|floatformat:4 }} units</div>
+        <button class="btn-red" style="width:100%;margin-top:0.6rem;padding:0.5rem;" onclick="closeTrade({{ t.id }}, '{{ t.asset.symbol }}')">Close Position</button>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- POSITIONS BOTTOM -->
+  <div class="positions-area">
+    <div class="pos-tabs">
+      <div class="pos-tab active" onclick="showTab('pos')">Open Positions ({{ open_trades|length }})</div>
+      <div class="pos-tab" onclick="showTab('hist')">Trade History</div>
+    </div>
+    <div id="tabPos">
+      {% if open_trades %}
+      <table class="z-table">
+        <thead><tr><th>Asset</th><th>Qty</th><th>Entry</th><th>Current</th><th>P&L</th><th>P&L %</th><th>Action</th></tr></thead>
+        <tbody id="positionsBody">
+          {% for t in open_trades %}
+          <tr id="posrow-{{ t.id }}">
+            <td><strong style="font-family:'Syne',sans-serif;">{{ t.asset.symbol }}</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">{{ t.asset.name }}</span></td>
+            <td>{{ t.quantity|floatformat:6 }}</td>
+            <td>${{ t.entry_price|floatformat:2 }}</td>
+            <td id="pos-cur-{{ t.id }}">${{ t.asset.current_price|floatformat:2 }}</td>
+            <td id="pos-pnl2-{{ t.id }}" class="{% if t.unrealized_pnl >= 0 %}up{% else %}down{% endif %}">{% if t.unrealized_pnl >= 0 %}+{% endif %}${{ t.unrealized_pnl|floatformat:2 }}</td>
+            <td id="pos-pct-{{ t.id }}" class="{% if t.unrealized_pnl_pct >= 0 %}up{% else %}down{% endif %}">{{ t.unrealized_pnl_pct|floatformat:2 }}%</td>
+            <td><button class="btn-red" style="padding:0.35rem 0.85rem;font-size:0.78rem;" onclick="closeTrade({{ t.id }},'{{ t.asset.symbol }}')">Close</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state" style="padding:1.5rem;">
+        <i class="fas fa-inbox" style="font-size:1.5rem;"></i>
+        <p style="font-size:0.875rem;">No open positions</p>
+      </div>
+      {% endif %}
+    </div>
+    <div id="tabHist" style="display:none;">
+      {% if closed_trades %}
+      <table class="z-table">
+        <thead><tr><th>Asset</th><th>Side</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for t in closed_trades %}
+          <tr>
+            <td><strong style="font-family:'Syne',sans-serif;">{{ t.asset.symbol }}</strong></td>
+            <td><span class="z-badge badge-{{ t.side }}">{{ t.side|upper }}</span></td>
+            <td>{{ t.quantity|floatformat:4 }}</td>
+            <td>${{ t.entry_price|floatformat:2 }}</td>
+            <td>${{ t.exit_price|floatformat:2 }}</td>
+            <td class="{% if t.pnl >= 0 %}up{% else %}down{% endif %}">{% if t.pnl >= 0 %}+{% endif %}${{ t.pnl|floatformat:2 }}</td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">{{ t.closed_at|date:"M d, H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state" style="padding:1.5rem;"><p style="font-size:0.875rem;">No closed trades yet</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const SYMBOL = '{{ asset.symbol }}';
+const BASE_PRICE = {{ asset.current_price }};
+let currentPrice = BASE_PRICE;
+let currentSide = 'buy';
+let balance = {{ wallet.balance }};
+let chartData = [];
+let chartCtx, chartCanvas;
+const HIGH_24 = {val: BASE_PRICE};
+const LOW_24 = {val: BASE_PRICE};
+
+// Init chart
+window.addEventListener('load', () => {
+  chartCanvas = document.getElementById('priceChart');
+  chartCtx = chartCanvas.getContext('2d');
+  chartCanvas.width = chartCanvas.parentElement.offsetWidth - 40;
+  for (let i = 0; i < 80; i++) {
+    const v = BASE_PRICE * (1 + (Math.random()-0.49)*0.02);
+    chartData.push(v);
+  }
+  drawChart();
+});
+
+function drawChart() {
+  const w = chartCanvas.width, h = 180;
+  chartCtx.clearRect(0,0,w,h);
+  const min = Math.min(...chartData)*0.999, max = Math.max(...chartData)*1.001;
+  const scaleY = v => h - ((v-min)/(max-min))*(h-20) - 10;
+  const scaleX = i => (i/(chartData.length-1))*w;
+  // Grid
+  chartCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+  chartCtx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const y = 10 + (i/4)*(h-20);
+    chartCtx.beginPath(); chartCtx.moveTo(0,y); chartCtx.lineTo(w,y); chartCtx.stroke();
+  }
+  // Gradient fill
+  const grad = chartCtx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(0,200,150,0.2)');
+  grad.addColorStop(1,'rgba(0,200,150,0)');
+  chartCtx.beginPath();
+  chartData.forEach((v,i) => i===0 ? chartCtx.moveTo(scaleX(i),scaleY(v)) : chartCtx.lineTo(scaleX(i),scaleY(v)));
+  chartCtx.lineTo(w,h); chartCtx.lineTo(0,h); chartCtx.closePath();
+  chartCtx.fillStyle = grad; chartCtx.fill();
+  // Line
+  chartCtx.beginPath();
+  chartData.forEach((v,i) => i===0 ? chartCtx.moveTo(scaleX(i),scaleY(v)) : chartCtx.lineTo(scaleX(i),scaleY(v)));
+  chartCtx.strokeStyle = '#00C896'; chartCtx.lineWidth = 2; chartCtx.stroke();
+  // Current price dot
+  const lastX = scaleX(chartData.length-1), lastY = scaleY(chartData[chartData.length-1]);
+  chartCtx.beginPath(); chartCtx.arc(lastX, lastY, 4, 0, Math.PI*2);
+  chartCtx.fillStyle = '#00C896'; chartCtx.fill();
+}
+
+// Live price polling
+setInterval(() => {
+  fetch('/trading/api/prices/', {headers:{'X-CSRFToken': window.CSRF}})
+    .then(r => r.json())
+    .then(data => {
+      Object.keys(data.prices).forEach(sym => {
+        const p = data.prices[sym];
+        const priceEl = document.getElementById('list-'+sym);
+        const chgEl = document.getElementById('chg-'+sym);
+        if (priceEl) priceEl.textContent = '$'+p.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        if (chgEl) {
+          chgEl.textContent = (p.change_24h>=0?'+':'')+p.change_24h.toFixed(2)+'%';
+          chgEl.className = 'asset-row-change '+(p.change_24h>=0?'up':'down');
+        }
+        if (sym === SYMBOL) {
+          currentPrice = p.price;
+          document.getElementById('mainPrice').textContent = '$'+p.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+          document.getElementById('orderPrice').textContent = '$'+p.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+          if (p.price > HIGH_24.val) { HIGH_24.val=p.price; document.getElementById('stat24H').textContent='$'+p.price.toLocaleString('en-US',{minimumFractionDigits:2}); }
+          if (p.price < LOW_24.val) { LOW_24.val=p.price; document.getElementById('stat24L').textContent='$'+p.price.toLocaleString('en-US',{minimumFractionDigits:2}); }
+          chartData.push(p.price); chartData.shift(); drawChart();
+          updateQtyPreview();
+        }
+      });
+    });
+}, 2000);
+
+// Positions polling
+setInterval(() => {
+  fetch('/trading/api/positions/')
+    .then(r=>r.json())
+    .then(d => {
+      balance = d.balance;
+      document.getElementById('panelBalance').textContent = '$'+d.balance.toLocaleString('en-US',{minimumFractionDigits:2});
+      const topBal = document.getElementById('topBalance');
+      if (topBal) topBal.querySelector('strong').textContent = '$'+d.balance.toLocaleString('en-US',{minimumFractionDigits:2});
+      d.positions.forEach(p => {
+        const pnlEl = document.getElementById('pos-pnl-'+p.id);
+        const pnl2El = document.getElementById('pos-pnl2-'+p.id);
+        const curEl = document.getElementById('pos-cur-'+p.id);
+        const pctEl = document.getElementById('pos-pct-'+p.id);
+        if (pnlEl) { pnlEl.textContent=(p.pnl>=0?'+$':'$')+p.pnl.toFixed(2).replace('-$','-$'); pnlEl.className=p.pnl>=0?'up':'down'; }
+        if (pnl2El) { pnl2El.textContent=(p.pnl>=0?'+':'')+p.pnl.toFixed(2); pnl2El.className=p.pnl>=0?'up':'down'; }
+        if (curEl) curEl.textContent='$'+p.current_price.toLocaleString('en-US',{minimumFractionDigits:2});
+        if (pctEl) { pctEl.textContent=p.pnl_pct.toFixed(2)+'%'; pctEl.className=p.pnl_pct>=0?'up':'down'; }
+      });
+    });
+}, 2000);
+
+function setTab(side) {
+  currentSide = side;
+  document.getElementById('tabBuy').classList.toggle('active', side==='buy');
+  document.getElementById('tabSell').classList.toggle('active', side==='sell');
+  const btn = document.getElementById('executeBtn');
+  btn.className = 'execute-btn '+side;
+  btn.textContent = (side==='buy'?'Buy ':'Sell ')+SYMBOL;
+  updateQtyPreview();
+}
+
+function updateQtyPreview() {
+  const amt = parseFloat(document.getElementById('tradeAmount').value)||0;
+  const qty = amt && currentPrice ? (amt/currentPrice) : 0;
+  document.getElementById('orderQty').textContent = qty ? qty.toFixed(6)+' '+SYMBOL : '—';
+}
+document.getElementById('tradeAmount').addEventListener('input', updateQtyPreview);
+
+function setPct(pct) {
+  const amt = (balance * pct / 100).toFixed(2);
+  document.getElementById('tradeAmount').value = amt;
+  updateQtyPreview();
+}
+
+function executeTrade() {
+  const amount = parseFloat(document.getElementById('tradeAmount').value);
+  if (!amount || amount <= 0) { showToast('Enter a valid amount.','error'); return; }
+  const btn = document.getElementById('executeBtn');
+  btn.disabled = true;
+  fetch('/trading/api/execute/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':window.CSRF},
+    body: JSON.stringify({symbol: SYMBOL, side: currentSide, amount: amount})
+  })
+  .then(r=>r.json())
+  .then(d => {
+    if (d.success) {
+      showToast(d.message, 'success');
+      balance = d.balance;
+      document.getElementById('panelBalance').textContent = '$'+d.balance.toLocaleString('en-US',{minimumFractionDigits:2});
+      document.getElementById('tradeAmount').value = '';
+      setTimeout(()=>location.reload(), 1500);
+    } else {
+      showToast(d.error,'error');
+    }
+    btn.disabled = false;
+  })
+  .catch(()=>{ showToast('Connection error.','error'); btn.disabled=false; });
+}
+
+function closeTrade(tradeId, symbol) {
+  if (!confirm('Close this position?')) return;
+  fetch('/trading/api/execute/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':window.CSRF},
+    body: JSON.stringify({symbol: symbol, side:'sell', trade_id: tradeId, amount:0})
+  })
+  .then(r=>r.json())
+  .then(d => {
+    if (d.success) {
+      showToast(d.message, d.pnl >= 0 ? 'success' : 'error');
+      setTimeout(()=>location.reload(), 1500);
+    } else {
+      showToast(d.error,'error');
+    }
+  });
+}
+
+function showTab(tab) {
+  document.getElementById('tabPos').style.display = tab==='pos'?'block':'none';
+  document.getElementById('tabHist').style.display = tab==='hist'?'block':'none';
+  document.querySelectorAll('.pos-tab').forEach((t,i)=>t.classList.toggle('active',(tab==='pos'&&i===0)||(tab==='hist'&&i===1)));
+}
+</script>
+{% endblock %}
