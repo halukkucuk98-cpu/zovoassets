@@ -1,0 +1,1 @@
+web: gunicorn zovoassets.wsgi --log-file -
