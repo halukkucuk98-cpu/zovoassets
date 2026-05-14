@@ -85,13 +85,11 @@ CSRF_TRUSTED_ORIGINS = [
 if os.environ.get("RAILWAY_ENVIRONMENT"):
     DEBUG = False
     SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
+    
+    import dj_database_url
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("PGDATABASE"),
-            "USER": os.environ.get("PGUSER"),
-            "PASSWORD": os.environ.get("PGPASSWORD"),
-            "HOST": os.environ.get("PGHOST"),
-            "PORT": os.environ.get("PGPORT", "5432"),
-        }
+        "default": dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+        )
     }
