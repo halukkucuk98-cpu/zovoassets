@@ -93,3 +93,7 @@ if os.environ.get("RAILWAY_ENVIRONMENT"):
             conn_max_age=600,
         )
     }
+    ALLOWED_HOSTS = [
+    'www.zovoassets.com',
+    '.railway.app',
+]
