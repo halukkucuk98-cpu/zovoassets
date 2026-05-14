@@ -85,7 +85,7 @@ CSRF_TRUSTED_ORIGINS = [
 if os.environ.get("RAILWAY_ENVIRONMENT"):
     DEBUG = False
     SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
-    
+
     import dj_database_url
     DATABASES = {
         "default": dj_database_url.config(
