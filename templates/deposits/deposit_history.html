@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Deposit History — ZovoAssets{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+  <div>
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Deposit History</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">All your deposit requests</p>
+  </div>
+  <a href="{% url 'deposit' %}" class="btn-gold"><i class="fas fa-plus" style="margin-right:0.4rem;"></i>New Deposit</a>
+</div>
+
+{% if deposits %}
+<div class="z-card" style="padding:0;overflow:hidden;">
+  <table class="z-table">
+    <thead>
+      <tr>
+        <th>Coin</th>
+        <th>Amount (USD)</th>
+        <th>Transaction ID</th>
+        <th>Status</th>
+        <th>Submitted</th>
+        <th>Confirmed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dep in deposits %}
+      <tr>
+        <td>
+          {% if dep.coin == 'BTC' %}
+          <div style="display:flex;align-items:center;gap:0.5rem;"><i class="fab fa-bitcoin" style="color:#F7931A;"></i><strong style="font-family:'Kanit',sans-serif;">BTC</strong></div>
+          {% elif dep.coin == 'ETH' %}
+          <div style="display:flex;align-items:center;gap:0.5rem;"><i class="fab fa-ethereum" style="color:#627EEA;"></i><strong style="font-family:'Kanit',sans-serif;">ETH</strong></div>
+          {% else %}
+          <div style="display:flex;align-items:center;gap:0.5rem;"><span style="color:#26A17B;font-weight:800;">₮</span><strong style="font-family:'Kanit',sans-serif;">USDT</strong></div>
+          {% endif %}
+        </td>
+        <td style="font-family:'Kanit',sans-serif;font-weight:700;">${{ dep.amount_usd|floatformat:2|intcomma }}</td>
+        <td style="font-family:'Courier New',monospace;font-size:0.78rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ dep.txid }}">{{ dep.txid }}</td>
+        <td>
+          {% if dep.status == 'pending' %}
+          <span class="z-badge badge-pending">Pending</span>
+          {% elif dep.status == 'confirmed' %}
+          <span class="z-badge badge-active">Confirmed</span>
+          {% else %}
+          <span class="z-badge badge-rejected">Rejected</span>
+          {% endif %}
+        </td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{{ dep.created_at|date:"M d, Y H:i" }}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{% if dep.confirmed_at %}{{ dep.confirmed_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td>
+      </tr>
+      {% if dep.admin_note %}
+      <tr>
+        <td colspan="6" style="background:rgba(255,255,255,0.02);padding:0.5rem 1rem 0.75rem;">
+          <span style="font-size:0.75rem;font-family:'Kanit',sans-serif;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Note:</span>
+          <span style="font-size:0.875rem;color:var(--text);margin-left:0.5rem;">{{ dep.admin_note }}</span>
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="z-card">
+  <div class="empty-state">
+    <i class="fas fa-wallet"></i>
+    <p style="font-family:'Kanit',sans-serif;font-weight:600;margin-bottom:0.5rem;">No deposits yet</p>
+    <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.5rem;">Fund your wallet to start trading and investing.</p>
+    <a href="{% url 'deposit' %}" class="btn-gold">Make a Deposit</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

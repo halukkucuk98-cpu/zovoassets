@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Deposit Funds — ZovoAssets{% endblock %}
+{% block extra_css %}
+<style>
+.coin-tabs{display:flex;gap:0.75rem;margin-bottom:2rem;flex-wrap:wrap;}
+.coin-tab{display:flex;align-items:center;gap:0.6rem;padding:0.65rem 1.25rem;border-radius:12px;border:1px solid var(--border-soft);background:transparent;cursor:pointer;transition:all 0.2s;text-decoration:none;color:var(--text-soft);font-weight:500;font-size:0.9rem;}
+.coin-tab:hover{border-color:var(--border);color:var(--text);}
+.coin-tab.active{border-color:var(--gold);background:var(--gold-dim);color:var(--text);}
+.coin-dot{width:10px;height:10px;border-radius:50%;}
+.wallet-box{background:var(--dark-3);border:1px solid var(--border-soft);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+.wallet-address{font-family:'Courier New',monospace;font-size:0.85rem;color:var(--text);background:var(--dark-4);border:1px solid var(--border-soft);border-radius:10px;padding:0.85rem 1rem;word-break:break-all;letter-spacing:0.5px;margin:0.75rem 0;}
+.copy-btn{background:var(--dark-4);border:1px solid var(--border-soft);border-radius:8px;padding:0.45rem 1rem;font-size:0.8rem;cursor:pointer;color:var(--text-soft);transition:all 0.2s;font-family:'Inter',sans-serif;}
+.copy-btn:hover{border-color:var(--gold);color:var(--gold);}
+.qr-box{display:flex;flex-direction:column;align-items:center;padding:1.25rem;background:white;border-radius:12px;width:fit-content;}
+.steps-list{counter-reset:steps;display:flex;flex-direction:column;gap:0.85rem;}
+.step-item{display:flex;align-items:flex-start;gap:0.85rem;padding:0.85rem 1rem;background:var(--dark-3);border-radius:10px;border:1px solid var(--border-soft);}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-size:0.72rem;font-weight:700;color:var(--gold);flex-shrink:0;margin-top:0.1rem;}
+.warning-box{background:rgba(255,77,106,0.06);border:1px solid rgba(255,77,106,0.2);border-radius:12px;padding:1rem 1.25rem;display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:1.5rem;}
+.info-box{background:rgba(77,142,255,0.06);border:1px solid rgba(77,142,255,0.2);border-radius:12px;padding:1rem 1.25rem;display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:1.5rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+  <div>
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Deposit Funds</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">Send crypto to fund your ZovoAssets wallet</p>
+  </div>
+  <a href="{% url 'deposit_history' %}" class="btn-outline-gold"><i class="fas fa-history" style="margin-right:0.4rem;"></i>Deposit History</a>
+</div>
+
+<!-- COIN SELECTOR -->
+<div class="coin-tabs">
+  <a href="?coin=BTC" class="coin-tab {% if selected_coin == 'BTC' %}active{% endif %}">
+    <div class="coin-dot" style="background:#F7931A;"></div> Bitcoin (BTC)
+  </a>
+  <a href="?coin=ETH" class="coin-tab {% if selected_coin == 'ETH' %}active{% endif %}">
+    <div class="coin-dot" style="background:#627EEA;"></div> Ethereum (ETH)
+  </a>
+  <a href="?coin=USDT" class="coin-tab {% if selected_coin == 'USDT' %}active{% endif %}">
+    <div class="coin-dot" style="background:#26A17B;"></div> USDT TRC20
+  </a>
+</div>
+
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;align-items:start;">
+  <!-- LEFT: Wallet info -->
+  <div>
+    <div class="wallet-box">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+        {% if selected_coin == 'BTC' %}
+        <div style="width:40px;height:40px;border-radius:10px;background:#F7931A22;display:flex;align-items:center;justify-content:center;"><i class="fab fa-bitcoin" style="color:#F7931A;font-size:1.2rem;"></i></div>
+        <div><div style="font-family:'Kanit',sans-serif;font-weight:700;">Bitcoin (BTC)</div><div style="font-size:0.8rem;color:var(--text-muted);">Bitcoin Network</div></div>
+        {% elif selected_coin == 'ETH' %}
+        <div style="width:40px;height:40px;border-radius:10px;background:#627EEA22;display:flex;align-items:center;justify-content:center;"><i class="fab fa-ethereum" style="color:#627EEA;font-size:1.2rem;"></i></div>
+        <div><div style="font-family:'Kanit',sans-serif;font-weight:700;">Ethereum (ETH)</div><div style="font-size:0.8rem;color:var(--text-muted);">ERC20 / TRC20</div></div>
+        {% else %}
+        <div style="width:40px;height:40px;border-radius:10px;background:#26A17B22;display:flex;align-items:center;justify-content:center;"><span style="color:#26A17B;font-weight:800;font-size:0.85rem;">₮</span></div>
+        <div><div style="font-family:'Kanit',sans-serif;font-weight:700;">Tether (USDT)</div><div style="font-size:0.8rem;color:var(--text-muted);">TRC20 Network</div></div>
+        {% endif %}
+      </div>
+
+      <label class="z-label">Deposit Address</label>
+      <div class="wallet-address" id="walletAddr">
+        {% if selected_coin == 'BTC' %}3MGNTKRzvpZ1N1P5mqXCYf7b7gfun8odsX
+        {% elif selected_coin == 'ETH' %}0x15328BFd7304a9b9423A7f3161e164D1fFEc5e5b
+        {% else %}TC275hE8BsjrCrAWpm6waiGpmYu24SqRAX{% endif %}
+      </div>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <button class="copy-btn" onclick="copyAddress()"><i class="fas fa-copy" style="margin-right:0.4rem;"></i>Copy Address</button>
+        <span id="copyMsg" style="font-size:0.78rem;color:var(--green);display:none;"><i class="fas fa-check"></i> Copied!</span>
+      </div>
+
+      <!-- QR CODE -->
+      <div style="margin-top:1.25rem;">
+        <label class="z-label">Scan QR Code</label>
+        <div class="qr-box" style="margin-top:0.5rem;">
+          <div id="qrcode"></div>
+          <p style="font-size:0.72rem;color:#666;margin-top:0.5rem;font-family:'Inter',sans-serif;">Scan to get address</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARNING -->
+    <div class="warning-box">
+      <i class="fas fa-triangle-exclamation" style="color:var(--red);margin-top:0.1rem;flex-shrink:0;"></i>
+      <div style="font-size:0.85rem;">
+        <strong style="color:var(--red);">Important:</strong>
+        <span style="color:var(--text-soft);"> Only send
+        {% if selected_coin == 'BTC' %}Bitcoin (BTC){% elif selected_coin == 'ETH' %}Ethereum (ETH){% else %}USDT via TRC20{% endif %}
+        to this address. Sending any other coin may result in permanent loss.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Submit form -->
+  <div>
+    <div class="z-card" style="margin-bottom:1.5rem;">
+      <h3 style="font-family:'Kanit',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;">Confirm Your Deposit</h3>
+
+      <div class="info-box">
+        <i class="fas fa-circle-info" style="color:var(--blue);flex-shrink:0;margin-top:0.1rem;"></i>
+        <div style="font-size:0.83rem;color:var(--text-soft);">
+          After sending, enter the transaction ID below. Our team will verify and credit your wallet within <strong style="color:var(--text);">30 minutes</strong>.
+        </div>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="coin" value="{{ selected_coin }}">
+
+        <div style="margin-bottom:1.25rem;">
+          <label class="z-label">Amount (USD equivalent)</label>
+          <div style="position:relative;">
+            <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:600;">$</span>
+            <input type="number" name="amount_usd" class="z-input" style="padding-left:2rem!important;" placeholder="Minimum ${{ min_deposit }}" min="{{ min_deposit }}" step="0.01" required>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem;">Minimum deposit: <strong style="color:var(--text);">${{ min_deposit }}</strong></p>
+        </div>
+
+        <div style="margin-bottom:1.75rem;">
+          <label class="z-label">Transaction ID / Hash</label>
+          <input type="text" name="txid" class="z-input" placeholder="Paste your transaction hash here..." required>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem;">Found in your wallet app after sending.</p>
+        </div>
+
+        <button type="submit" class="btn-gold" style="width:100%;text-align:center;padding:0.85rem;">
+          <i class="fas fa-paper-plane" style="margin-right:0.5rem;"></i>Submit Deposit Request
+        </button>
+      </form>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="z-card">
+      <h3 style="font-family:'Kanit',sans-serif;font-size:0.95rem;font-weight:700;margin-bottom:1rem;">How it works</h3>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div style="font-size:0.875rem;color:var(--text-soft);">Copy the wallet address above or scan the QR code with your crypto app.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div style="font-size:0.875rem;color:var(--text-soft);">Send your desired amount in {{ selected_coin }} to that address.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div style="font-size:0.875rem;color:var(--text-soft);">Copy the Transaction ID from your wallet and paste it in the form.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div style="font-size:0.875rem;color:var(--text-soft);">Our team confirms the payment and credits your wallet within 30 minutes.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const addr = document.getElementById('walletAddr').textContent.trim();
+new QRCode(document.getElementById('qrcode'), {
+  text: addr, width: 160, height: 160,
+  colorDark: "#000000", colorLight: "#ffffff",
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+function copyAddress() {
+  navigator.clipboard.writeText(addr).then(() => {
+    const msg = document.getElementById('copyMsg');
+    msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 2500);
+  });
+}
+</script>
+{% endblock %}
