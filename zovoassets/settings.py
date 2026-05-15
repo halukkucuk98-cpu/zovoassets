@@ -5,6 +5,8 @@ SECRET_KEY = "django-insecure-zovoassets-dev-key-change-in-production"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -69,3 +71,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://www.zovoassets.com",
+]
+ALLOWED_HOSTS = [
+    "www.zovoassets.com",
+    ".railway.app",
+]
