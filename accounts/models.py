@@ -4,18 +4,21 @@ import uuid
 
 class Profile(models.Model):
     user = models.OneToOneField("core.User", on_delete=models.CASCADE, related_name="profile")
+    avatar_initials = models.CharField(max_length=4, blank=True)
     country = models.CharField(max_length=100, blank=True)
-    referral_code = models.CharField(max_length=20, unique=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    referral_code = models.CharField(max_length=12, unique=True, blank=True)
+    referred_by = models.ForeignKey("core.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="referrals")
     referral_bonus_earned = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.email} — Profile"
 
     def save(self, *args, **kwargs):
         if not self.referral_code:
             self.referral_code = uuid.uuid4().hex[:8].upper()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.email} profile"
 
 
 class KYC(models.Model):
@@ -31,33 +34,30 @@ class KYC(models.Model):
     ]
 
     user = models.OneToOneField("core.User", on_delete=models.CASCADE, related_name="kyc")
-    id_type = models.CharField(max_length=20, choices=ID_TYPES, blank=True)
-    id_number = models.CharField(max_length=100, blank=True)
-    id_front = models.ImageField(upload_to="kyc/", blank=True, null=True)
-    id_back = models.ImageField(upload_to="kyc/", blank=True, null=True)
-    selfie = models.ImageField(upload_to="kyc/", blank=True, null=True)
+    id_type = models.CharField(max_length=20, choices=ID_TYPES)
+    id_number = models.CharField(max_length=50)
+    id_front = models.ImageField(upload_to="kyc/", blank=True)
+    id_back = models.ImageField(upload_to="kyc/", blank=True)
+    selfie = models.ImageField(upload_to="kyc/", blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     admin_note = models.TextField(blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.user.email} — KYC [{self.status}]"
-
-    def get_status_display(self):
-        return dict(self.STATUS_CHOICES).get(self.status, self.status)
+        return f"{self.user.email} KYC [{self.status}]"
 
 
 class Withdrawal(models.Model):
     COIN_CHOICES = [
         ("BTC", "Bitcoin (BTC)"),
         ("ETH", "Ethereum (ETH)"),
-        ("USDT", "Tether (USDT TRC20)"),
+        ("USDT", "Tether USDT TRC20"),
     ]
     STATUS_CHOICES = [
         ("pending", "Pending"),
-        ("approved", "Approved"),
         ("processing", "Processing"),
+        ("completed", "Completed"),
         ("rejected", "Rejected"),
     ]
 

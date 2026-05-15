@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from .models import Profile, KYC, Withdrawal, WithdrawalPin
+from decimal import Decimal
+from .models import Profile, KYC, Withdrawal
+from core.models import Wallet
 
 
 def get_or_create_profile(user):
@@ -14,6 +16,8 @@ def get_or_create_profile(user):
 def profile(request):
     prof = get_or_create_profile(request.user)
     kyc = KYC.objects.filter(user=request.user).first()
+    kyc_status = kyc.status if kyc else None
+
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "update_profile":
@@ -39,10 +43,11 @@ def profile(request):
                 update_session_auth_hash(request, request.user)
                 messages.success(request, "Password changed successfully.")
             return redirect("profile")
+
     return render(request, "accounts/profile.html", {
         "prof": prof,
         "kyc": kyc,
-        "kyc_status": kyc.status if kyc else None,
+        "kyc_status": kyc_status,
         "wallet": request.user.wallet,
     })
 
@@ -79,12 +84,13 @@ def kyc_submit(request):
 def referral(request):
     prof = get_or_create_profile(request.user)
     referred_users = request.user.referrals.all()
+    referral_count = referred_users.count()
     referral_url = request.build_absolute_uri(f"/register/?ref={prof.referral_code}")
     return render(request, "accounts/referral.html", {
         "prof": prof,
         "referral_code": prof.referral_code,
         "referral_url": referral_url,
         "referred_users": referred_users,
-        "referral_count": referred_users.count(),
+        "referral_count": referral_count,
         "bonus_earned": prof.referral_bonus_earned,
     })

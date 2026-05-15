@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Withdrawal History — ZovoAssets{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+  <div>
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Withdrawal History</h1>
+    <p style="color:var(--text-muted);">All your withdrawal requests</p>
+  </div>
+  <a href="{% url 'withdraw' %}" class="btn-gold"><i class="fas fa-plus" style="margin-right:0.4rem;"></i>New Withdrawal</a>
+</div>
+{% if withdrawals %}
+<div class="z-card" style="padding:0;overflow:hidden;">
+  <table class="z-table">
+    <thead>
+      <tr><th>Coin</th><th>Amount</th><th>Wallet Address</th><th>Status</th><th>Date</th><th>Processed</th></tr>
+    </thead>
+    <tbody>
+      {% for w in withdrawals %}
+      <tr>
+        <td>
+          {% if w.coin == 'BTC' %}<div style="display:flex;align-items:center;gap:0.5rem;"><i class="fab fa-bitcoin" style="color:#F7931A;"></i><strong>BTC</strong></div>
+          {% elif w.coin == 'ETH' %}<div style="display:flex;align-items:center;gap:0.5rem;"><i class="fab fa-ethereum" style="color:#627EEA;"></i><strong>ETH</strong></div>
+          {% else %}<div style="display:flex;align-items:center;gap:0.5rem;"><span style="color:#26A17B;font-weight:800;">₮</span><strong>USDT</strong></div>{% endif %}
+        </td>
+        <td style="font-family:'Kanit',sans-serif;font-weight:700;">${{ w.amount_usd|floatformat:2|intcomma }}</td>
+        <td style="font-family:'Courier New',monospace;font-size:0.75rem;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ w.wallet_address }}">{{ w.wallet_address }}</td>
+        <td>
+          {% if w.status == 'pending' %}<span class="z-badge badge-pending">Pending</span>
+          {% elif w.status == 'completed' %}<span class="z-badge badge-active">Completed</span>
+          {% elif w.status == 'processing' %}<span class="z-badge badge-open">Processing</span>
+          {% else %}<span class="z-badge badge-rejected">Rejected</span>{% endif %}
+        </td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{{ w.created_at|date:"M d, Y H:i" }}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{% if w.processed_at %}{{ w.processed_at|date:"M d, Y" }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="z-card">
+  <div class="empty-state">
+    <i class="fas fa-arrow-up-from-line"></i>
+    <p style="font-family:'Kanit',sans-serif;font-weight:600;margin-bottom:0.5rem;">No withdrawals yet</p>
+    <a href="{% url 'withdraw' %}" class="btn-gold">Withdraw Now</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

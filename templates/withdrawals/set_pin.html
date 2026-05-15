@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Set Withdrawal PIN — ZovoAssets{% endblock %}
+{% block content %}
+<div style="max-width:480px;margin:0 auto;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Withdrawal PIN</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">{% if has_pin %}Update your{% else %}Set a{% endif %} 4-digit PIN to authorize withdrawals</p>
+  </div>
+  <div class="z-card" style="padding:2rem;">
+    <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:2rem;">
+      <i class="fas fa-shield-halved" style="color:var(--gold);flex-shrink:0;margin-top:0.1rem;"></i>
+      <div style="font-size:0.85rem;color:var(--text-soft);">Your withdrawal PIN is required every time you request a withdrawal. Keep it private and never share it with anyone.</div>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">{% if has_pin %}New {% endif %}PIN (4 digits)</label>
+        <input type="password" name="pin" class="z-input" placeholder="••••" maxlength="4" inputmode="numeric" required>
+      </div>
+      <div style="margin-bottom:1.75rem;">
+        <label class="z-label">Confirm PIN</label>
+        <input type="password" name="confirm_pin" class="z-input" placeholder="••••" maxlength="4" inputmode="numeric" required>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;text-align:center;padding:0.85rem;">
+        <i class="fas fa-lock" style="margin-right:0.5rem;"></i>{% if has_pin %}Update PIN{% else %}Set PIN{% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

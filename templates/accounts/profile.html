@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Profile — ZovoAssets{% endblock %}
+{% block content %}
+<div style="max-width:640px;margin:0 auto;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">My Profile</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">Manage your account details</p>
+  </div>
+
+  <!-- AVATAR -->
+  <div class="z-card" style="margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--gold-dim);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:800;font-size:1.5rem;color:var(--gold);flex-shrink:0;">
+      {{ user.full_name|slice:":2"|upper }}
+    </div>
+    <div>
+      <div style="font-family:'Kanit',sans-serif;font-weight:700;font-size:1.1rem;">{{ user.full_name }}</div>
+      <div style="font-size:0.875rem;color:var(--text-muted);">{{ user.email }}</div>
+      <div style="margin-top:0.5rem;">
+        {% if kyc_status == 'approved' %}
+        <span class="z-badge badge-active"><i class="fas fa-shield-check" style="margin-right:0.3rem;"></i>Verified</span>
+        {% else %}
+        <span class="z-badge badge-pending">Unverified</span>
+        <a href="{% url 'kyc_submit' %}" style="font-size:0.78rem;color:var(--gold);margin-left:0.75rem;">Verify now →</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- UPDATE PROFILE -->
+  <div class="z-card" style="margin-bottom:1.5rem;">
+    <h3 style="font-family:'Kanit',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.5rem;">Personal Information</h3>
+    <form method="post" action="{% url 'profile' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_profile">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
+        <div>
+          <label class="z-label">Full Name</label>
+          <input type="text" name="full_name" class="z-input" value="{{ user.full_name }}" required>
+        </div>
+        <div>
+          <label class="z-label">Phone</label>
+          <input type="text" name="phone" class="z-input" value="{{ user.phone }}" placeholder="+234...">
+        </div>
+      </div>
+      <div style="margin-bottom:1.75rem;">
+        <label class="z-label">Email Address</label>
+        <input type="email" class="z-input" value="{{ user.email }}" disabled style="opacity:0.6;cursor:not-allowed;">
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">Email cannot be changed.</p>
+      </div>
+      <button type="submit" class="btn-gold">Save Changes</button>
+    </form>
+  </div>
+
+  <!-- CHANGE PASSWORD -->
+  <div class="z-card">
+    <h3 style="font-family:'Kanit',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.5rem;">Change Password</h3>
+    <form method="post" action="{% url 'profile' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="change_password">
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">Current Password</label>
+        <input type="password" name="current_password" class="z-input" placeholder="Enter current password" required>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">New Password</label>
+        <input type="password" name="new_password" class="z-input" placeholder="Min 8 characters" required>
+      </div>
+      <div style="margin-bottom:1.75rem;">
+        <label class="z-label">Confirm New Password</label>
+        <input type="password" name="confirm_password" class="z-input" placeholder="Repeat new password" required>
+      </div>
+      <button type="submit" class="btn-outline-gold">Update Password</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

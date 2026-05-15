@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Portfolio — ZovoAssets{% endblock %}
 {% block content %}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
@@ -16,7 +17,7 @@
       <div class="stat-icon" style="background:var(--gold-dim);"><i class="fas fa-wallet" style="color:var(--gold);"></i></div>
       <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Wallet</span>
     </div>
-    <div class="stat-value">${{ wallet.balance|floatformat:2 }}</div>
+    <div class="stat-value">${{ wallet.balance|floatformat:2|intcomma }}</div>
     <div class="stat-label">Available cash</div>
   </div>
   <div class="stat-card">
@@ -24,7 +25,7 @@
       <div class="stat-icon" style="background:rgba(77,142,255,0.12);"><i class="fas fa-briefcase" style="color:var(--blue);"></i></div>
       <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Positions</span>
     </div>
-    <div class="stat-value">${{ total_open_value|floatformat:2 }}</div>
+    <div class="stat-value">${{ total_open_value|floatformat:2|intcomma }}</div>
     <div class="stat-label">Open position value</div>
   </div>
   <div class="stat-card">
@@ -32,7 +33,7 @@
       <div class="stat-icon" style="background:rgba(0,200,150,0.12);"><i class="fas fa-arrow-trend-up" style="color:var(--green);"></i></div>
       <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Unrealized</span>
     </div>
-    <div class="stat-value {% if total_unrealized >= 0 %}up{% else %}down{% endif %}">{% if total_unrealized >= 0 %}+{% endif %}${{ total_unrealized|floatformat:2 }}</div>
+    <div class="stat-value {% if total_unrealized >= 0 %}up{% else %}down{% endif %}">{% if total_unrealized >= 0 %}+{% endif %}${{ total_unrealized|floatformat:2|intcomma }}</div>
     <div class="stat-label">Unrealized P&L</div>
   </div>
   <div class="stat-card">
@@ -40,7 +41,7 @@
       <div class="stat-icon" style="background:rgba(201,168,76,0.12);"><i class="fas fa-coins" style="color:var(--gold);"></i></div>
       <span style="font-size:0.68rem;color:var(--text-muted);font-family:'Syne',sans-serif;text-transform:uppercase;">Realized</span>
     </div>
-    <div class="stat-value {% if realized_pnl >= 0 %}up{% else %}down{% endif %}">{% if realized_pnl >= 0 %}+{% endif %}${{ realized_pnl|floatformat:2 }}</div>
+    <div class="stat-value {% if realized_pnl >= 0 %}up{% else %}down{% endif %}">{% if realized_pnl >= 0 %}+{% endif %}${{ realized_pnl|floatformat:2|intcomma }}</div>
     <div class="stat-label">Realized P&L</div>
   </div>
   <div class="stat-card">
@@ -71,11 +72,11 @@
           </div>
         </td>
         <td><span class="z-badge badge-buy">BUY</span></td>
-        <td style="font-family:'Syne',sans-serif;">{{ t.quantity|floatformat:6 }}</td>
-        <td>${{ t.entry_price|floatformat:2 }}</td>
-        <td id="pt-cur-{{ t.id }}">${{ t.asset.current_price|floatformat:2 }}</td>
-        <td>${{ t.cost_basis|floatformat:2 }}</td>
-        <td id="pt-val-{{ t.id }}">${{ t.current_value|floatformat:2 }}</td>
+        <td style="font-family:'Syne',sans-serif;">{{ t.quantity|floatformat:6 |intcomma}}</td>
+        <td>${{ t.entry_price|floatformat:2|intcomma }}</td>
+        <td id="pt-cur-{{ t.id }}">${{ t.asset.current_price|floatformat:2|intcomma }}</td>
+        <td>${{ t.cost_basis|floatformat:2|intcomma }}</td>
+        <td id="pt-val-{{ t.id }}">${{ t.current_value|floatformat:2|intcomma }}</td>
         <td id="pt-pnl-{{ t.id }}" class="{% if t.unrealized_pnl >= 0 %}up{% else %}down{% endif %}" style="font-family:'Syne',sans-serif;font-weight:700;">{% if t.unrealized_pnl >= 0 %}+{% endif %}${{ t.unrealized_pnl|floatformat:2 }}</td>
         <td id="pt-pct-{{ t.id }}" class="{% if t.unrealized_pnl_pct >= 0 %}up{% else %}down{% endif %}">{{ t.unrealized_pnl_pct|floatformat:2 }}%</td>
         <td>
@@ -111,9 +112,9 @@
       <tr>
         <td><strong style="font-family:'Syne',sans-serif;">{{ t.asset.symbol }}</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">{{ t.asset.name }}</span></td>
         <td><span class="z-badge badge-{{ t.side }}">{{ t.side|upper }}</span></td>
-        <td>{{ t.quantity|floatformat:4 }}</td>
-        <td>${{ t.entry_price|floatformat:2 }}</td>
-        <td>${{ t.exit_price|floatformat:2 }}</td>
+        <td>{{ t.quantity|floatformat:4|intcomma }}</td>
+        <td>${{ t.entry_price|floatformat:2|intcomma }}</td>
+        <td>${{ t.exit_price|floatformat:2|intcomma }}</td>
         <td style="font-family:'Syne',sans-serif;font-weight:700;" class="{% if t.pnl >= 0 %}up{% else %}down{% endif %}">{% if t.pnl >= 0 %}+{% endif %}${{ t.pnl|floatformat:2 }}</td>
         <td style="font-size:0.8rem;color:var(--text-muted);">{{ t.closed_at|date:"M d, Y H:i" }}</td>
       </tr>

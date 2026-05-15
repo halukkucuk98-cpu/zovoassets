@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}KYC Verification — ZovoAssets{% endblock %}
+{% block extra_css %}
+<style>
+.upload-box{border:2px dashed var(--border-soft);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
+.upload-box:hover{border-color:var(--gold);background:var(--gold-dim);}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-box i{font-size:2rem;color:var(--text-muted);margin-bottom:0.75rem;display:block;}
+.upload-box p{font-size:0.875rem;color:var(--text-muted);}
+.upload-box .filename{font-size:0.8rem;color:var(--green);margin-top:0.5rem;display:none;}
+</style>
+{% endblock %}
+{% block content %}
+<div style="max-width:640px;margin:0 auto;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">KYC Verification</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;">Verify your identity to unlock full platform features</p>
+  </div>
+
+  {% if kyc %}
+  <div class="z-card" style="margin-bottom:1.5rem;
+    {% if kyc.status == 'approved' %}background:rgba(0,200,150,0.05);border-color:rgba(0,200,150,0.25);
+    {% elif kyc.status == 'rejected' %}background:rgba(255,77,106,0.05);border-color:rgba(255,77,106,0.25);
+    {% else %}background:rgba(77,142,255,0.05);border-color:rgba(77,142,255,0.25);{% endif %}">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+        {% if kyc.status == 'approved' %}background:rgba(0,200,150,0.12);{% elif kyc.status == 'rejected' %}background:rgba(255,77,106,0.12);{% else %}background:rgba(77,142,255,0.12);{% endif %}">
+        <i class="fas {% if kyc.status == 'approved' %}fa-circle-check" style="color:var(--green){% elif kyc.status == 'rejected' %}fa-circle-xmark" style="color:var(--red){% else %}fa-hourglass-half" style="color:var(--blue){% endif %};"></i>
+      </div>
+      <div>
+        <div style="font-family:'Kanit',sans-serif;font-weight:700;margin-bottom:0.2rem;">
+          KYC Status: <span class="z-badge badge-{% if kyc.status == 'approved' %}active{% elif kyc.status == 'rejected' %}rejected{% else %}pending{% endif %}">{{ kyc.get_status_display }}</span>
+        </div>
+        <p style="font-size:0.875rem;color:var(--text-muted);">
+          {% if kyc.status == 'approved' %}Your identity has been verified. You have full access to all features.
+          {% elif kyc.status == 'rejected' %}Your submission was rejected. {% if kyc.admin_note %}Reason: {{ kyc.admin_note }}{% endif %} Please resubmit.
+          {% else %}Your documents are under review. This usually takes 24-48 hours.{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% if kyc.status == 'approved' %}
+  <div class="z-card">
+    <div class="empty-state" style="padding:2rem;">
+      <i class="fas fa-shield-check" style="color:var(--green);opacity:1;"></i>
+      <p style="font-family:'Kanit',sans-serif;font-weight:700;color:var(--green);margin-bottom:0.5rem;">Identity Verified</p>
+      <p style="font-size:0.875rem;">Your account is fully verified. Enjoy all ZovoAssets features.</p>
+      <a href="{% url 'dashboard' %}" class="btn-gold" style="margin-top:1rem;">Go to Dashboard</a>
+    </div>
+  </div>
+  {% endif %}
+  {% if kyc.status != 'approved' %}
+  {% endif %}
+  {% endif %}
+
+  {% if not kyc or kyc.status == 'rejected' %}
+  <div class="z-card">
+    <h3 style="font-family:'Kanit',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.5rem;">Submit Verification Documents</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">ID Type</label>
+        <select name="id_type" class="z-input" required>
+          <option value="">Select ID type...</option>
+          <option value="passport">Passport</option>
+          <option value="national_id">National ID Card</option>
+          <option value="drivers_license">Driver's License</option>
+        </select>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">ID Number</label>
+        <input type="text" name="id_number" class="z-input" placeholder="Enter your ID number" required>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
+        <div>
+          <label class="z-label">ID Front</label>
+          <div class="upload-box">
+            <input type="file" name="id_front" accept="image/*" onchange="showFile(this,'front-name')">
+            <i class="fas fa-id-card"></i>
+            <p>Upload front of ID</p>
+            <span class="filename" id="front-name"></span>
+          </div>
+        </div>
+        <div>
+          <label class="z-label">ID Back</label>
+          <div class="upload-box">
+            <input type="file" name="id_back" accept="image/*" onchange="showFile(this,'back-name')">
+            <i class="fas fa-id-card"></i>
+            <p>Upload back of ID</p>
+            <span class="filename" id="back-name"></span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:1.75rem;">
+        <label class="z-label">Selfie with ID</label>
+        <div class="upload-box">
+          <input type="file" name="selfie" accept="image/*" onchange="showFile(this,'selfie-name')">
+          <i class="fas fa-camera"></i>
+          <p>Take a selfie holding your ID document</p>
+          <span class="filename" id="selfie-name"></span>
+        </div>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;text-align:center;padding:0.85rem;">
+        <i class="fas fa-paper-plane" style="margin-right:0.5rem;"></i>Submit for Verification
+      </button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+<script>
+function showFile(input, spanId) {
+  const span = document.getElementById(spanId);
+  if (input.files.length > 0) {
+    span.textContent = input.files[0].name;
+    span.style.display = 'block';
+    input.parentElement.style.borderColor = 'var(--green)';
+  }
+}
+</script>
+{% endblock %}

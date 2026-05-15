@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Withdraw Funds — ZovoAssets{% endblock %}
+{% block content %}
+<div style="max-width:560px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.2rem;">Withdraw Funds</h1>
+      <p style="color:var(--text-muted);">Send your balance to your crypto wallet</p>
+    </div>
+    <a href="{% url 'withdrawal_history' %}" class="btn-outline-gold"><i class="fas fa-history" style="margin-right:0.4rem;"></i>History</a>
+  </div>
+
+  <div class="stat-card" style="margin-bottom:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.3rem;">Available Balance</div>
+        <div style="font-family:'Kanit',sans-serif;font-size:2rem;font-weight:800;">${{ wallet.balance|floatformat:2|intcomma }}</div>
+      </div>
+      <div class="stat-icon" style="background:var(--gold-dim);"><i class="fas fa-wallet" style="color:var(--gold);font-size:1.2rem;"></i></div>
+    </div>
+  </div>
+
+  <div class="z-card">
+    <form method="post">
+      {% csrf_token %}
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">Select Coin</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
+          <label style="cursor:pointer;">
+            <input type="radio" name="coin" value="BTC" checked style="display:none;" class="coin-radio">
+            <div class="coin-opt" style="padding:0.65rem;border:1px solid var(--border-soft);border-radius:10px;text-align:center;transition:all 0.2s;">
+              <i class="fab fa-bitcoin" style="color:#F7931A;display:block;font-size:1.3rem;margin-bottom:0.3rem;"></i>
+              <span style="font-size:0.78rem;font-family:'Kanit',sans-serif;font-weight:600;">BTC</span>
+            </div>
+          </label>
+          <label style="cursor:pointer;">
+            <input type="radio" name="coin" value="ETH" style="display:none;" class="coin-radio">
+            <div class="coin-opt" style="padding:0.65rem;border:1px solid var(--border-soft);border-radius:10px;text-align:center;transition:all 0.2s;">
+              <i class="fab fa-ethereum" style="color:#627EEA;display:block;font-size:1.3rem;margin-bottom:0.3rem;"></i>
+              <span style="font-size:0.78rem;font-family:'Kanit',sans-serif;font-weight:600;">ETH</span>
+            </div>
+          </label>
+          <label style="cursor:pointer;">
+            <input type="radio" name="coin" value="USDT" style="display:none;" class="coin-radio">
+            <div class="coin-opt" style="padding:0.65rem;border:1px solid var(--border-soft);border-radius:10px;text-align:center;transition:all 0.2s;">
+              <span style="color:#26A17B;display:block;font-size:1.3rem;font-weight:800;margin-bottom:0.3rem;">₮</span>
+              <span style="font-size:0.78rem;font-family:'Kanit',sans-serif;font-weight:600;">USDT</span>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label class="z-label">Amount (USD)</label>
+        <div style="position:relative;">
+          <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:600;">$</span>
+          <input type="number" name="amount_usd" class="z-input" style="padding-left:2rem!important;" placeholder="Minimum $20" min="20" step="0.01" max="{{ wallet.balance }}" required>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+          <button type="button" class="pct-btn" onclick="setAmt(25)" style="flex:1;padding:0.35rem;border-radius:6px;border:1px solid var(--border-soft);background:transparent;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-family:'Kanit',sans-serif;">25%</button>
+          <button type="button" class="pct-btn" onclick="setAmt(50)" style="flex:1;padding:0.35rem;border-radius:6px;border:1px solid var(--border-soft);background:transparent;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-family:'Kanit',sans-serif;">50%</button>
+          <button type="button" class="pct-btn" onclick="setAmt(75)" style="flex:1;padding:0.35rem;border-radius:6px;border:1px solid var(--border-soft);background:transparent;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-family:'Kanit',sans-serif;">75%</button>
+          <button type="button" class="pct-btn" onclick="setAmt(100)" style="flex:1;padding:0.35rem;border-radius:6px;border:1px solid var(--border-soft);background:transparent;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-family:'Kanit',sans-serif;">Max</button>
+        </div>
+      </div>
+      <div style="margin-bottom:1.75rem;">
+        <label class="z-label">Your Wallet Address</label>
+        <input type="text" name="wallet_address" class="z-input" placeholder="Paste your receiving wallet address" required>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">Double-check your address. Wrong address = permanent loss.</p>
+      </div>
+      <div style="background:rgba(255,77,106,0.06);border:1px solid rgba(255,77,106,0.2);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1.5rem;font-size:0.85rem;">
+        <i class="fas fa-triangle-exclamation" style="color:var(--red);margin-right:0.5rem;"></i>
+        <span style="color:var(--text-soft);">Withdrawals are processed within 24 hours. Minimum withdrawal is $20.</span>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;text-align:center;">Submit Withdrawal Request</button>
+    </form>
+  </div>
+</div>
+<style>
+.coin-radio:checked + .coin-opt { border-color: var(--gold) !important; background: var(--gold-dim); }
+.coin-opt:hover { border-color: var(--border) !important; }
+</style>
+<script>
+const bal = {{ wallet.balance }};
+function setAmt(pct) {
+  document.querySelector('[name="amount_usd"]').value = (bal * pct / 100).toFixed(2);
+}
+</script>
+{% endblock %}
