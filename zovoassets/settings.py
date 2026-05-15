@@ -2,9 +2,15 @@ from pathlib import Path
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 SECRET_KEY = "django-insecure-zovoassets-dev-key-change-in-production"
+
 DEBUG = True
+
 ALLOWED_HOSTS = ["*"]
+
+
+# APPLICATIONS
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -14,6 +20,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+
     "core",
     "investments",
     "loans",
@@ -21,6 +28,9 @@ INSTALLED_APPS = [
     "deposits",
     "accounts",
 ]
+
+
+# MIDDLEWARE
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -33,7 +43,15 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+# URLS / WSGI
+
 ROOT_URLCONF = "zovoassets.urls"
+
+WSGI_APPLICATION = "zovoassets.wsgi.application"
+
+
+# TEMPLATES
 
 TEMPLATES = [
     {
@@ -51,7 +69,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "zovoassets.wsgi.application"
+
+# DATABASE
 
 DATABASES = {
     "default": {
@@ -60,20 +79,43 @@ DATABASES = {
     }
 }
 
+
+# AUTH
+
 AUTH_USER_MODEL = "core.User"
+
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/login/"
 
+
+# STATIC FILES
+
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static"
+]
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
+
+
+# MEDIA FILES
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+
+# DEFAULT PRIMARY KEY
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# CSRF
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
@@ -82,18 +124,29 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.zovoassets.com",
 ]
 
+
+# RAILWAY PRODUCTION SETTINGS
+
 if os.environ.get("RAILWAY_ENVIRONMENT"):
+
     DEBUG = False
-    SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
+
+    SECRET_KEY = os.environ.get(
+        "SECRET_KEY",
+        SECRET_KEY
+    )
 
     import dj_database_url
+
     DATABASES = {
         "default": dj_database_url.config(
             default=os.environ.get("DATABASE_URL"),
             conn_max_age=600,
         )
     }
+
     ALLOWED_HOSTS = [
-    'www.zovoassets.com',
-    '.railway.app',
-]
+        "zovoassets.com",
+        "www.zovoassets.com",
+        ".railway.app",
+    ]
