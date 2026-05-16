@@ -1,11 +1,10 @@
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-zovoassets-dev-key-change-in-production"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
-
-
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -25,6 +24,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -68,14 +68,27 @@ LOGOUT_REDIRECT_URL = "/login/"
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://*.railway.app",
+    "https://*.up.railway.app",
+    "https://zovoassets.com",
     "https://www.zovoassets.com",
 ]
-ALLOWED_HOSTS = [
-    "www.zovoassets.com",
-    ".railway.app",
-]
+
+if os.environ.get("RAILWAY_ENVIRONMENT"):
+    DEBUG = False
+    SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+        )
+    }

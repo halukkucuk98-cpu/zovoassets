@@ -102,6 +102,129 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
 .toast.error{border-color:rgba(255,77,106,0.3);}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 992px){
+
+  .ticker-bar{
+      width: 280px !important;
+  }
+
+  .page-body{
+      padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px){
+
+  :root{
+      --sidebar: 0px;
+  }
+
+  body{
+      overflow-x: hidden;
+  }
+
+  /* Hide sidebar */
+  .sidebar{
+      display: none;
+  }
+
+  /* Topbar */
+  .topbar{
+      left: 0;
+      padding: 0 1rem;
+      height: auto;
+      min-height: 60px;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+  }
+
+  .topbar-left,
+  .topbar-right{
+      width: 100%;
+      justify-content: space-between;
+  }
+
+  /* Hide ticker on mobile */
+  .ticker-bar{
+      display: none;
+  }
+
+  /* Balance card smaller */
+  .topbar-balance{
+      padding: 0.4rem 0.75rem;
+      font-size: 0.78rem;
+  }
+
+  .topbar-user span{
+      display: none;
+  }
+
+  /* Theme button */
+  #themeToggle{
+      top: 14px !important;
+      right: 1rem !important;
+      padding: 0.45rem 0.8rem !important;
+  }
+
+  #themeLabel{
+      display: none;
+  }
+
+  /* Main layout */
+  .main-content{
+      margin-left: 0;
+      width: 100%;
+      padding-top: 80px;
+  }
+
+  .page-body{
+      padding: 1rem;
+  }
+
+  /* Tables scroll properly */
+  .z-table{
+      min-width: 650px;
+  }
+
+  .table-wrapper{
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+  }
+
+  /* Buttons fit mobile */
+  .btn-gold,
+  .btn-outline-gold,
+  .btn-green,
+  .btn-red{
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+  }
+
+  /* Better card spacing */
+  .z-card,
+  .stat-card{
+      border-radius: 18px;
+      padding: 1rem;
+  }
+
+  /* Text scaling */
+  .stat-value{
+      font-size: 1.45rem;
+  }
+
+  h1{
+      font-size: 1.35rem !important;
+  }
+
+  h2{
+      font-size: 1.15rem !important;
+  }
+}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -214,4 +337,4 @@ function toggleTheme(){const isLight=document.body.classList.toggle('light');doc
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
-</html>
+</html> d
