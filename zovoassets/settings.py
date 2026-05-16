@@ -2,9 +2,21 @@ from pathlib import Path
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = "django-insecure-zovoassets-dev-key-change-in-production"
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-zovoassets-dev-key-change-in-production"
+)
+
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".railway.app",
+    "zovoassets.com",
+    "www.zovoassets.com",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -14,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+
     "core",
     "investments",
     "loans",
@@ -60,7 +73,17 @@ DATABASES = {
     }
 }
 
+# Railway Postgres
+if os.environ.get("DATABASE_URL"):
+    import dj_database_url
+
+    DATABASES["default"] = dj_database_url.parse(
+        os.environ.get("DATABASE_URL"),
+        conn_max_age=600
+    )
+
 AUTH_USER_MODEL = "core.User"
+
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/login/"
@@ -68,27 +91,33 @@ LOGOUT_REDIRECT_URL = "/login/"
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# -----------------------------
+# CSRF / SECURITY FIX
+# -----------------------------
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.railway.app",
-    "https://*.up.railway.app",
     "https://zovoassets.com",
     "https://www.zovoassets.com",
+    "https://*.railway.app",
+    "https://*.up.railway.app",
 ]
 
-if os.environ.get("RAILWAY_ENVIRONMENT"):
-    DEBUG = False
-    SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
-    import dj_database_url
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"),
-            conn_max_age=600,
-        )
-    }
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",
+    "https",
+)
