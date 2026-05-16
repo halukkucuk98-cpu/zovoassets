@@ -7,45 +7,278 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
+/* =============================================
+   CSS CUSTOM PROPERTIES
+============================================= */
 :root{
   --gold:#C9A84C;--gold-light:#E8C86A;--gold-dim:rgba(201,168,76,0.12);
   --dark:#08080F;--dark-2:#0E0E1A;--dark-3:#141420;--dark-4:#1C1C2C;--dark-5:#222232;
   --border:rgba(201,168,76,0.18);--border-soft:rgba(255,255,255,0.06);
   --text:#F0F0FA;--text-muted:#6B6B85;--text-soft:#9999B3;
   --green:#00C896;--red:#FF4D6A;--blue:#4D8EFF;
-  --sidebar:220px;
+  --sidebar-width:220px;
+  --topbar-height:60px;
 }
 body.light{
   --dark:#F4F5F7;--dark-2:#FFFFFF;--dark-3:#F0F1F3;--dark-4:#E4E5E8;--dark-5:#D8D9DC;
   --border:rgba(201,168,76,0.25);--border-soft:rgba(0,0,0,0.08);
   --text:#0A0A14;--text-muted:#6B7280;--text-soft:#4B5563;
 }
+
+/* =============================================
+   RESET & BASE
+============================================= */
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--dark);
+  color:var(--text);
+  min-height:100vh;
+  /* Prevent horizontal overflow at root */
+  overflow-x:hidden;
+}
 h1,h2,h3,h4,h5,h6,.syne{font-family:'Kanit',sans-serif;}
 a{text-decoration:none;}
-.topbar{position:fixed;top:0;left:var(--sidebar);right:0;height:60px;background:var(--dark-2);border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:100;}
-.topbar-left{display:flex;align-items:center;gap:1rem;}
-.topbar-right{display:flex;align-items:center;gap:1.25rem;}
-.topbar-balance{background:var(--dark-4);border:1px solid var(--border-soft);border-radius:10px;padding:0.4rem 1rem;font-size:0.85rem;}
-.topbar-balance span{color:var(--text-muted);margin-right:0.4rem;}
-.topbar-balance strong{font-family:'Kanit',sans-serif;color:var(--gold);}
-.topbar-user{display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--text-soft);cursor:pointer;}
-.topbar-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;font-size:0.75rem;color:var(--gold);}
-.sidebar{position:fixed;top:0;left:0;width:var(--sidebar);height:100vh;background:var(--dark-2);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;z-index:200;overflow-y:auto;}
-.sidebar-logo{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border-soft);}
+
+/* =============================================
+   SIDEBAR — DESKTOP
+============================================= */
+.sidebar{
+  position:fixed;
+  top:0;left:0;
+  width:var(--sidebar-width);
+  height:100vh;
+  background:var(--dark-2);
+  border-right:1px solid var(--border-soft);
+  display:flex;
+  flex-direction:column;
+  z-index:300;
+  overflow-y:auto;
+  /* Smooth transition for mobile open/close */
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.sidebar-logo{
+  padding:1.25rem 1.5rem;
+  border-bottom:1px solid var(--border-soft);
+  /* Prevent logo from being cut off */
+  flex-shrink:0;
+}
 .logo-text{font-family:'Kanit',sans-serif;font-weight:800;font-size:1.15rem;color:var(--gold);}
 .logo-text span{color:var(--text);}
-.sidebar-section{padding:1.25rem 1rem 0.4rem;font-family:'Kanit',sans-serif;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);}
-.sidebar a{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;margin:0.1rem 0.5rem;border-radius:10px;color:var(--text-soft);font-size:0.875rem;font-weight:500;transition:all 0.2s;}
+.sidebar-section{
+  padding:1.25rem 1rem 0.4rem;
+  font-family:'Kanit',sans-serif;
+  font-size:0.62rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--text-muted);
+  /* Prevent section labels from shrinking */
+  flex-shrink:0;
+}
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+  padding:0.6rem 1rem;
+  margin:0.1rem 0.5rem;
+  border-radius:10px;
+  color:var(--text-soft);
+  font-size:0.875rem;
+  font-weight:500;
+  transition:all 0.2s;
+  /* Ensure full clickability */
+  position:relative;
+  z-index:1;
+}
 .sidebar a:hover{color:var(--text);background:var(--dark-4);}
 .sidebar a.active{color:var(--gold);background:var(--gold-dim);font-weight:600;}
-.sidebar a i{width:18px;text-align:center;font-size:0.9rem;}
-.sidebar-bottom{margin-top:auto;padding:1rem;border-top:1px solid var(--border-soft);}
-.sidebar-bottom a{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.5rem;border-radius:10px;color:var(--text-muted);font-size:0.875rem;transition:all 0.2s;}
+.sidebar a i{width:18px;text-align:center;font-size:0.9rem;flex-shrink:0;}
+
+/* Sidebar bottom (logout) — always visible */
+.sidebar-bottom{
+  margin-top:auto;
+  padding:1rem;
+  border-top:1px solid var(--border-soft);
+  flex-shrink:0;
+}
+.sidebar-bottom a{
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+  padding:0.6rem 0.5rem;
+  border-radius:10px;
+  color:var(--text-muted);
+  font-size:0.875rem;
+  transition:all 0.2s;
+}
 .sidebar-bottom a:hover{color:var(--red);}
-.main-content{margin-left:var(--sidebar);padding-top:60px;min-height:100vh;}
+
+/* =============================================
+   TOPBAR
+============================================= */
+.topbar{
+  position:fixed;
+  top:0;
+  /* Desktop: offset by sidebar */
+  left:var(--sidebar-width);
+  right:0;
+  height:var(--topbar-height);
+  background:var(--dark-2);
+  border-bottom:1px solid var(--border-soft);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2rem;
+  z-index:200;
+  /* Prevent topbar from collapsing on content */
+  flex-wrap:nowrap;
+  gap:0.75rem;
+}
+.topbar-left{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  /* Allow ticker to shrink without breaking layout */
+  min-width:0;
+  flex:1;
+}
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:1.25rem;
+  flex-shrink:0;
+}
+.topbar-balance{
+  background:var(--dark-4);
+  border:1px solid var(--border-soft);
+  border-radius:10px;
+  padding:0.4rem 1rem;
+  font-size:0.85rem;
+  white-space:nowrap;
+}
+.topbar-balance span{color:var(--text-muted);margin-right:0.4rem;}
+.topbar-balance strong{font-family:'Kanit',sans-serif;color:var(--gold);}
+.topbar-user{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  font-size:0.85rem;
+  color:var(--text-soft);
+  cursor:pointer;
+  white-space:nowrap;
+}
+.topbar-avatar{
+  width:32px;height:32px;
+  border-radius:50%;
+  background:var(--gold-dim);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Kanit',sans-serif;font-weight:700;font-size:0.75rem;
+  color:var(--gold);
+  flex-shrink:0;
+}
+
+/* Hamburger — hidden on desktop */
+.hamburger{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:none;
+  color:var(--text);
+  font-size:1.2rem;
+  cursor:pointer;
+  padding:0.5rem;
+  border-radius:8px;
+  transition:background 0.2s;
+  /* Adequate touch target */
+  min-width:44px;
+  min-height:44px;
+  flex-shrink:0;
+}
+.hamburger:hover{background:var(--dark-4);}
+
+/* Theme toggle — integrated into topbar-right, not floating */
+.theme-toggle-btn{
+  background:var(--dark-4);
+  border:1px solid var(--border-soft);
+  border-radius:10px;
+  padding:0.45rem 1rem;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  color:var(--text-soft);
+  font-size:0.82rem;
+  font-family:'Inter',sans-serif;
+  font-weight:500;
+  transition:all 0.2s;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.theme-toggle-btn:hover{border-color:var(--border);color:var(--text);}
+
+/* =============================================
+   SIDEBAR OVERLAY (mobile)
+============================================= */
+.sidebar-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  z-index:299;
+  /* Ensure overlay is actually clickable */
+  cursor:pointer;
+  /* Smooth fade */
+  opacity:0;
+  transition:opacity 0.3s ease;
+}
+.sidebar-overlay.active{
+  display:block;
+  opacity:1;
+}
+
+/* =============================================
+   TICKER
+============================================= */
+.ticker-bar{
+  background:var(--dark-3);
+  border-radius:8px;
+  border:1px solid var(--border-soft);
+  height:32px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  width:480px;
+  /* Don't let ticker overflow topbar */
+  max-width:100%;
+  flex-shrink:1;
+}
+.ticker-track{display:flex;gap:0;white-space:nowrap;animation:ticker 50s linear infinite;}
+.ticker-item{
+  display:flex;align-items:center;gap:0.5rem;
+  padding:0 1.5rem;font-size:0.75rem;
+  border-right:1px solid var(--border-soft);
+}
+.ticker-sym{font-family:'Kanit',sans-serif;font-weight:700;color:var(--text);}
+@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* =============================================
+   MAIN CONTENT
+============================================= */
+.main-content{
+  margin-left:var(--sidebar-width);
+  padding-top:var(--topbar-height);
+  min-height:100vh;
+  /* Ensure content scrolls, not body */
+  overflow-x:hidden;
+}
 .page-body{padding:2rem;}
+
+/* =============================================
+   ALERTS, CARDS, BUTTONS, etc. (unchanged)
+============================================= */
 .z-alert{border-radius:10px;padding:0.85rem 1.2rem;font-size:0.875rem;border:1px solid;display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;}
 .z-alert.success{background:rgba(0,200,150,0.08);border-color:rgba(0,200,150,0.25);color:var(--green);}
 .z-alert.error{background:rgba(255,77,106,0.08);border-color:rgba(255,77,106,0.25);color:var(--red);}
@@ -91,139 +324,169 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
 .empty-state i{font-size:2.5rem;margin-bottom:1rem;opacity:0.3;display:block;}
 .up{color:var(--green);}
 .down{color:var(--red);}
-.ticker-bar{background:var(--dark-3);border-bottom:1px solid var(--border-soft);height:32px;overflow:hidden;display:flex;align-items:center;}
-.ticker-track{display:flex;gap:0;white-space:nowrap;animation:ticker 50s linear infinite;}
-.ticker-item{display:flex;align-items:center;gap:0.5rem;padding:0 1.5rem;font-size:0.75rem;border-right:1px solid var(--border-soft);}
-.ticker-sym{font-family:'Kanit',sans-serif;font-weight:700;color:var(--text);}
-@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-.toast-container{position:fixed;top:70px;right:5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;}
-.toast{background:var(--dark-3);border:1px solid var(--border-soft);border-radius:12px;padding:0.85rem 1.25rem;font-size:0.875rem;min-width:280px;display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+
+/* Table horizontal scroll wrapper */
+.table-scroll{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  /* Must NOT have overflow:hidden on parent .z-card */
+}
+
+/* =============================================
+   TOAST
+============================================= */
+.toast-container{
+  position:fixed;
+  /* Sits below topbar, clear of theme button */
+  top:70px;right:1.5rem;
+  z-index:9999;
+  display:flex;flex-direction:column;gap:0.5rem;
+  /* Don't block page interactions */
+  pointer-events:none;
+}
+.toast{
+  background:var(--dark-3);border:1px solid var(--border-soft);
+  border-radius:12px;padding:0.85rem 1.25rem;
+  font-size:0.875rem;min-width:280px;
+  display:flex;align-items:center;gap:0.75rem;
+  animation:slideIn 0.3s ease;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  pointer-events:all;
+}
 .toast.success{border-color:rgba(0,200,150,0.3);}
 .toast.error{border-color:rgba(255,77,106,0.3);}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
-/* =========================
-   MOBILE RESPONSIVE
-========================= */
 
-@media (max-width: 992px){
-
-  .ticker-bar{
-      width: 280px !important;
-  }
-
-  .page-body{
-      padding: 1.25rem;
-  }
+/* =============================================
+   RESPONSIVE — TABLET (992px)
+============================================= */
+@media (max-width:992px){
+  .ticker-bar{width:280px;}
+  .page-body{padding:1.25rem;}
+  #themeLabel{display:none;}
 }
 
-@media (max-width: 768px){
+/* =============================================
+   RESPONSIVE — MOBILE (768px)
+   KEY FIX: sidebar uses transform, NOT display:none
+   This preserves the transition and keeps the DOM
+   intact for links/logout to work.
+============================================= */
+@media (max-width:768px){
 
-  :root{
-      --sidebar: 0px;
-  }
-
-  body{
-      overflow-x: hidden;
-  }
-
-  /* Hide sidebar */
+  /* === SIDEBAR === */
   .sidebar{
-      display: none;
+    /* Slide off-screen — do NOT use display:none */
+    transform:translateX(-100%);
+    /* Sits above overlay */
+    z-index:301;
+    /* Full height scrollable */
+    height:100vh;
+    overflow-y:auto;
+    /* Prevent sidebar scroll from propagating to body */
+    overscroll-behavior:contain;
+  }
+  .sidebar.open{
+    transform:translateX(0);
   }
 
-  /* Topbar */
+  /* === HAMBURGER — visible on mobile === */
+  .hamburger{
+    display:flex;
+  }
+
+  /* === TOPBAR — single row, no wrap === */
   .topbar{
-      left: 0;
-      padding: 0 1rem;
-      height: auto;
-      min-height: 60px;
-      flex-wrap: wrap;
-      gap: 0.75rem;
+    left:0;
+    padding:0 1rem;
+    /* Fixed single-row height — no wrapping */
+    height:var(--topbar-height);
+    flex-wrap:nowrap;
+    gap:0.5rem;
   }
-
-  .topbar-left,
+  .topbar-left{
+    /* Shrink ticker to make room */
+    gap:0.5rem;
+    flex:1;
+    min-width:0;
+  }
   .topbar-right{
-      width: 100%;
-      justify-content: space-between;
+    gap:0.75rem;
   }
 
-  /* Hide ticker on mobile */
+  /* Hide ticker on small screens */
   .ticker-bar{
-      display: none;
+    display:none;
   }
 
-  /* Balance card smaller */
+  /* Compact balance */
   .topbar-balance{
-      padding: 0.4rem 0.75rem;
-      font-size: 0.78rem;
+    padding:0.35rem 0.65rem;
+    font-size:0.78rem;
   }
 
-  .topbar-user span{
-      display: none;
+  /* Hide username text, keep avatar */
+  .topbar-user span:not(.topbar-avatar){
+    display:none;
   }
 
-  /* Theme button */
-  #themeToggle{
-      top: 14px !important;
-      right: 1rem !important;
-      padding: 0.45rem 0.8rem !important;
+  /* === THEME BUTTON — compact === */
+  .theme-toggle-btn{
+    padding:0.45rem 0.65rem;
   }
+  #themeLabel{display:none;}
 
-  #themeLabel{
-      display: none;
-  }
-
-  /* Main layout */
+  /* === MAIN CONTENT === */
   .main-content{
-      margin-left: 0;
-      width: 100%;
-      padding-top: 80px;
+    /* Sidebar is gone from flow — reset margin */
+    margin-left:0;
+    padding-top:var(--topbar-height);
+    /* Full width */
+    width:100%;
+  }
+  .page-body{padding:1rem;}
+
+  /* === TABLES — horizontal scroll === */
+  .z-table{min-width:600px;}
+  /* Cards with tables must NOT clip overflow */
+  .z-card.table-card{
+    padding:0;
+    overflow:visible;
+  }
+  .table-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-radius:0 0 16px 16px;
   }
 
-  .page-body{
-      padding: 1rem;
+  /* === BUTTONS — full width on mobile === */
+  .btn-gold,.btn-outline-gold,.btn-green,.btn-red{
+    width:100%;
+    text-align:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
-  /* Tables scroll properly */
-  .z-table{
-      min-width: 650px;
-  }
+  /* === CARDS === */
+  .z-card,.stat-card{border-radius:12px;padding:1rem;}
 
-  .table-wrapper{
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-  }
+  /* === TYPOGRAPHY === */
+  .stat-value{font-size:1.35rem;}
+  h1{font-size:1.25rem!important;}
+  h2{font-size:1.1rem!important;}
 
-  /* Buttons fit mobile */
-  .btn-gold,
-  .btn-outline-gold,
-  .btn-green,
-  .btn-red{
-      width: 100%;
-      text-align: center;
-      justify-content: center;
-  }
+  /* Prevent body scroll when sidebar is open */
+  body.sidebar-open{overflow:hidden;}
+}
 
-  /* Better card spacing */
-  .z-card,
-  .stat-card{
-      border-radius: 18px;
-      padding: 1rem;
-  }
-
-  /* Text scaling */
-  .stat-value{
-      font-size: 1.45rem;
-  }
-
-  h1{
-      font-size: 1.35rem !important;
-  }
-
-  h2{
-      font-size: 1.15rem !important;
-  }
+/* =============================================
+   RESPONSIVE — SMALL MOBILE (480px)
+============================================= */
+@media (max-width:480px){
+  .topbar-balance{display:none;}
+  .page-body{padding:0.75rem;}
 }
 </style>
 {% block extra_css %}{% endblock %}
@@ -231,14 +494,26 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
 <body>
 
 {% if user.is_authenticated %}
-<aside class="sidebar">
+
+<!-- =============================================
+     SIDEBAR OVERLAY (mobile backdrop)
+     Clicking it closes the sidebar
+============================================= -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- =============================================
+     SIDEBAR
+============================================= -->
+<aside class="sidebar" id="mainSidebar">
   <div class="sidebar-logo">
     <a href="/"><span class="logo-text">ZOVO<span>ASSETS</span></span></a>
   </div>
+
   <div class="sidebar-section">Main</div>
   <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
     <i class="fas fa-th-large"></i> Dashboard
   </a>
+
   <div class="sidebar-section">Trading</div>
   <a href="{% url 'market' %}" class="{% if request.resolver_match.url_name == 'market' %}active{% endif %}">
     <i class="fas fa-globe"></i> Markets
@@ -249,6 +524,7 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
   <a href="{% url 'portfolio' %}" class="{% if request.resolver_match.url_name == 'portfolio' %}active{% endif %}">
     <i class="fas fa-briefcase"></i> Portfolio
   </a>
+
   <div class="sidebar-section">Finance</div>
   <a href="{% url 'deposit' %}" class="{% if 'deposit' in request.resolver_match.url_name %}active{% endif %}">
     <i class="fas fa-arrow-down-to-line"></i> Deposit
@@ -265,6 +541,7 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
   <a href="{% url 'loan_history' %}" class="{% if request.resolver_match.url_name == 'loan_history' %}active{% endif %}">
     <i class="fas fa-history"></i> Loan History
   </a>
+
   <div class="sidebar-section">Account</div>
   <a href="{% url 'profile' %}" class="{% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
     <i class="fas fa-user"></i> My Profile
@@ -275,37 +552,55 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
   <a href="{% url 'referral' %}" class="{% if request.resolver_match.url_name == 'referral' %}active{% endif %}">
     <i class="fas fa-users"></i> Referrals
   </a>
+
+  <!-- Logout always visible at bottom -->
   <div class="sidebar-bottom">
-    <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <a href="{% url 'logout' %}">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
   </div>
 </aside>
 
+<!-- =============================================
+     TOPBAR
+============================================= -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="ticker-bar" style="width:480px;border-radius:8px;border:1px solid var(--border-soft);">
+    <!-- Hamburger: only visible on mobile via CSS -->
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mainSidebar">
+      <i class="fas fa-bars" id="hamburgerIcon"></i>
+    </button>
+
+    <div class="ticker-bar">
       <div class="ticker-track" id="topTicker"></div>
     </div>
   </div>
+
   <div class="topbar-right">
     {% load humanize %}
     <div class="topbar-balance" id="topBalance">
       <span>Balance</span><strong>${{ user.wallet.balance|floatformat:2|intcomma }}</strong>
     </div>
-    <a href="{% url 'profile' %}" class="topbar-user" style="text-decoration:none;color:inherit;">
+
+    <!-- Theme toggle — in topbar, not floating fixed -->
+    <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <i class="fas fa-sun" id="themeIcon"></i>
+      <span id="themeLabel">Light</span>
+    </button>
+
+    <a href="{% url 'profile' %}" class="topbar-user" style="color:inherit;">
       <div class="topbar-avatar">{{ user.full_name|slice:":2"|upper }}</div>
       <span>{{ user.full_name.split.0 }}</span>
     </a>
   </div>
 </header>
 
-<!-- THEME TOGGLE -->
-<button id="themeToggle" onclick="toggleTheme()" style="position:fixed;top:14px;right:1.5rem;z-index:9999;background:var(--dark-4);border:1px solid var(--border-soft);border-radius:10px;padding:0.45rem 1rem;cursor:pointer;display:flex;align-items:center;gap:0.5rem;color:var(--text-soft);font-size:0.82rem;font-family:'Inter',sans-serif;font-weight:500;transition:all 0.2s;box-shadow:0 2px 12px rgba(0,0,0,0.3);">
-  <i class="fas fa-sun" id="themeIcon"></i>
-  <span id="themeLabel">Light</span>
-</button>
-
+<!-- Toast notifications -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- =============================================
+     MAIN CONTENT
+============================================= -->
 <div class="main-content">
   <div class="page-body">
     {% for message in messages %}
@@ -314,20 +609,126 @@ select.z-input option{background:var(--dark-3);color:var(--text);}
       {{ message }}
     </div>
     {% endfor %}
+
     {% block content %}{% endblock %}
   </div>
 </div>
 
+<!-- =============================================
+     SCRIPTS
+============================================= -->
 <script>
+// --- Ticker ---
 const TICKER_DATA=[{s:'BTC',p:67240},{s:'ETH',p:3480},{s:'BNB',p:412},{s:'SOL',p:178},{s:'AAPL',p:189.5},{s:'TSLA',p:245.3},{s:'NVDA',p:875.2},{s:'XRP',p:0.62}];
-function buildTicker(id){const el=document.getElementById(id);if(!el)return;const items=[...TICKER_DATA,...TICKER_DATA].map(a=>`<div class="ticker-item"><span class="ticker-sym">${a.s}</span><span class="up">$${a.p.toLocaleString()}</span></div>`).join('');el.innerHTML=items;}
+function buildTicker(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const items=[...TICKER_DATA,...TICKER_DATA].map(a=>`<div class="ticker-item"><span class="ticker-sym">${a.s}</span><span class="up">$${a.p.toLocaleString()}</span></div>`).join('');
+  el.innerHTML=items;
+}
 buildTicker('topTicker');
-function showToast(msg,type='success'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className=`toast ${type}`;const icon=type==='success'?'fa-circle-check':'fa-circle-xmark';const color=type==='success'?'var(--green)':'var(--red)';t.innerHTML=`<i class="fas ${icon}" style="color:${color}"></i><span>${msg}</span>`;c.appendChild(t);setTimeout(()=>{t.style.animation='slideOut 0.3s ease forwards';setTimeout(()=>t.remove(),300);},3500);}
+
+// --- Toast ---
+function showToast(msg,type='success'){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  const icon=type==='success'?'fa-circle-check':'fa-circle-xmark';
+  const color=type==='success'?'var(--green)':'var(--red)';
+  t.innerHTML=`<i class="fas ${icon}" style="color:${color}"></i><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.animation='slideOut 0.3s ease forwards';setTimeout(()=>t.remove(),300);},3500);
+}
 window.showToast=showToast;
-function getCookie(name){let v=null;document.cookie.split(';').forEach(c=>{const p=c.trim().split('=');if(p[0]===name)v=decodeURIComponent(p[1]);});return v;}
+
+// --- CSRF ---
+function getCookie(name){
+  let v=null;
+  document.cookie.split(';').forEach(c=>{const p=c.trim().split('=');if(p[0]===name)v=decodeURIComponent(p[1]);});
+  return v;
+}
 window.CSRF=getCookie('csrftoken');
-function toggleTheme(){const isLight=document.body.classList.toggle('light');document.getElementById('themeIcon').className=isLight?'fas fa-moon':'fas fa-sun';document.getElementById('themeLabel').textContent=isLight?'Dark':'Light';localStorage.setItem('theme',isLight?'light':'dark');}
-(function(){if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');const icon=document.getElementById('themeIcon');const label=document.getElementById('themeLabel');if(icon)icon.className='fas fa-moon';if(label)label.textContent='Dark';}})();
+
+// --- Theme ---
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('themeIcon').className=isLight?'fas fa-moon':'fas fa-sun';
+  const label=document.getElementById('themeLabel');
+  if(label)label.textContent=isLight?'Dark':'Light';
+  localStorage.setItem('theme',isLight?'light':'dark');
+}
+(function(){
+  if(localStorage.getItem('theme')==='light'){
+    document.body.classList.add('light');
+    const icon=document.getElementById('themeIcon');
+    const label=document.getElementById('themeLabel');
+    if(icon)icon.className='fas fa-moon';
+    if(label)label.textContent='Dark';
+  }
+})();
+
+// --- Sidebar (mobile) ---
+// FIX: toggleSidebar is now properly defined and wired to both
+// the hamburger button and the overlay click.
+const sidebar=document.getElementById('mainSidebar');
+const overlay=document.getElementById('sidebarOverlay');
+const hamburgerBtn=document.getElementById('hamburgerBtn');
+const hamburgerIcon=document.getElementById('hamburgerIcon');
+
+function openSidebar(){
+  sidebar.classList.add('open');
+  overlay.classList.add('active');
+  document.body.classList.add('sidebar-open');
+  hamburgerBtn.setAttribute('aria-expanded','true');
+  hamburgerIcon.className='fas fa-times';
+}
+
+function closeSidebar(){
+  sidebar.classList.remove('open');
+  overlay.classList.remove('active');
+  document.body.classList.remove('sidebar-open');
+  hamburgerBtn.setAttribute('aria-expanded','false');
+  hamburgerIcon.className='fas fa-bars';
+}
+
+function toggleSidebar(){
+  if(sidebar.classList.contains('open')){
+    closeSidebar();
+  } else {
+    openSidebar();
+  }
+}
+
+// Wire hamburger button
+hamburgerBtn.addEventListener('click', toggleSidebar);
+
+// Wire overlay click to close
+overlay.addEventListener('click', closeSidebar);
+
+// Close sidebar when a nav link is tapped on mobile
+// (prevents stale open state after navigation)
+sidebar.querySelectorAll('a').forEach(link=>{
+  link.addEventListener('click', ()=>{
+    // Small delay lets the browser start navigation before closing
+    if(window.innerWidth <= 768){
+      closeSidebar();
+    }
+  });
+});
+
+// Close sidebar on Escape key
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && sidebar.classList.contains('open')){
+    closeSidebar();
+  }
+});
+
+// Close sidebar if window resized to desktop (avoids stuck-open state)
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth > 768){
+    closeSidebar();
+  }
+});
 </script>
 
 {% else %}
@@ -337,4 +738,4 @@ function toggleTheme(){const isLight=document.body.classList.toggle('light');doc
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% block extra_js %}{% endblock %}
 </body>
-</html> d
+</html>
